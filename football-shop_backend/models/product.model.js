@@ -60,6 +60,11 @@ const productSchema = new mongoose.Schema(
       lowercase: true,
       trim: true
     },
+    status: {
+      type: String,
+      enum: ['draft', 'published', 'archived', 'suspended'],
+      default: 'draft'
+    },
     // Visible/no visible (independiente del borrado lógico)
     isActive: { type: Boolean, default: true, index: true },
     // null = activo; con fecha = borrado lógicamente
