@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Paleta del dashboard de referencia: fondo crema, azul petróleo como color principal.
+   Todo el tema vive en estas variables (formato "H S% L%" de shadcn/ui). */
+@layer base {
+  :root {
+    --background: 48 67% 96%;
+    --foreground: 195 23% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 195 23% 15%;
+    --primary: 197 88% 34%;
+    --primary-foreground: 50 100% 98%;
+    --muted: 49 45% 90%;
+    --muted-foreground: 193 12% 37%;
+    --border: 49 27% 83%;
+    --input: 49 27% 78%;
+    --ring: 197 88% 34%;
+    --destructive: 0 74% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply min-h-screen bg-background font-sans text-foreground antialiased;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@layer utilities {
+  .page-enter {
+    animation: page-enter 300ms ease-out;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
+}
