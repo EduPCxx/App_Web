@@ -15,11 +15,13 @@ export default {
         card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' }
       },
       boxShadow: {
-        soft: '0 16px 40px -28px rgba(16, 47, 64, 0.35)'
+        soft: '0 18px 48px -30px rgba(0, 0, 0, 0.58)',
+        glow: '0 0 28px -14px hsl(0 0% 100% / 0.42)'
       },
       borderRadius: {
-        xl: '1rem',
-        '2xl': '1.5rem'
+        xl: '1.125rem',
+        '2xl': '1.5rem',
+        '3xl': '1.875rem'
       },
       fontFamily: {
         sans: ['Space Grotesk', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif']

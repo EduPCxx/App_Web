@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import ActiveBadge from '@/components/common/ActiveBadge';
 import DataTable from '@/components/common/DataTable';
 import ErrorState from '@/components/common/ErrorState';
-import PageHeader from '@/components/common/PageHeader';
 import { TableSkeleton } from '@/components/common/Skeletons';
 import useProducts from '@/hooks/useProducts';
 import { confirmAction, notifySuccess } from '@/utils/alerts';
@@ -95,15 +94,22 @@ export default function ProductsListPage() {
   }
 
   return (
-    <section className="space-y-6">
-      <PageHeader eyebrow="Gestión de productos" title="CRUD de productos">
+    <section className="min-h-screen space-y-5 bg-transparent px-4 py-4 sm:px-5 lg:px-7 lg:py-6">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-200/65">Catálogo</p>
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-100">Productos</h1>
+          <p className="mt-1 text-xs text-slate-400">Administra el catálogo de tu tienda.</p>
+        </div>
         <Button asChild size="lg">
           <Link to="/products/new">
             <FiPlus aria-hidden="true" /> Crear producto
           </Link>
         </Button>
-      </PageHeader>
-      {content}
+      </header>
+      <div className="overflow-hidden rounded-3xl border border-white/[0.09] bg-[#1b1b1d]/90 p-3 shadow-[0_24px_70px_-46px_rgba(0,0,0,0.72)] sm:p-5">
+        {content}
+      </div>
     </section>
   );
 }

@@ -26,7 +26,7 @@ export default function DataTable({ columns, data, rowKey = '_id', emptyMessage 
           </thead>
           <tbody>
             {data.map((row) => (
-              <tr key={row[rowKey]} className="border-t border-border bg-card/70 transition-colors hover:bg-muted/30">
+              <tr key={row[rowKey]} className="border-t border-border/70 bg-card/50 transition-colors hover:bg-white/[0.025]">
                 {columns.map((column) => (
                   <td key={column.key} className={cn('px-4 py-3 align-middle', column.cellClassName)}>
                     {column.render ? column.render(row) : row[column.key]}

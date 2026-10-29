@@ -4,36 +4,53 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Paleta del dashboard de referencia: fondo crema, azul petróleo como color principal.
-   Todo el tema vive en estas variables (formato "H S% L%" de shadcn/ui). */
 @layer base {
   :root {
-    --background: 48 67% 96%;
-    --foreground: 195 23% 15%;
-    --card: 0 0% 100%;
-    --card-foreground: 195 23% 15%;
-    --primary: 197 88% 34%;
-    --primary-foreground: 50 100% 98%;
-    --muted: 49 45% 90%;
-    --muted-foreground: 193 12% 37%;
-    --border: 49 27% 83%;
-    --input: 49 27% 78%;
-    --ring: 197 88% 34%;
-    --destructive: 0 74% 52%;
+    color-scheme: dark;
+    --background: 220 9% 9%;
+    --foreground: 40 12% 94%;
+    --card: 220 8% 12%;
+    --card-foreground: 40 12% 94%;
+    --primary: 43 68% 58%;
+    --primary-foreground: 220 12% 10%;
+    --muted: 220 7% 18%;
+    --muted-foreground: 220 5% 66%;
+    --border: 220 6% 23%;
+    --input: 220 6% 28%;
+    --ring: 43 68% 58%;
+    --destructive: 0 68% 60%;
     --destructive-foreground: 0 0% 100%;
-    --radius: 0.75rem;
+    --radius: 1rem;
   }
 
   * {
     @apply border-border;
   }
 
+  html {
+    background: hsl(var(--background));
+  }
+
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, hsl(43 55% 48% / 0.09), transparent 36rem),
+      radial-gradient(ellipse at 100% 100%, hsl(220 8% 55% / 0.07), transparent 40rem);
+    background-attachment: fixed;
   }
 
   #root {
     @apply min-h-screen;
+  }
+
+  ::selection {
+    color: hsl(var(--primary-foreground));
+    background: hsl(var(--primary) / 0.8);
+  }
+
+  option {
+    color: hsl(var(--foreground));
+    background: hsl(var(--card));
   }
 }
 
@@ -57,5 +74,15 @@
 @media (prefers-reduced-motion: reduce) {
   .page-enter {
     animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    transition-duration: 180ms;
   }
 }
