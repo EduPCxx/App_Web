@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "seed": "node seed.js",
     "migrate:slug": "node migrations/001-product-slug.js",
-    "test": "node tests/middlewares.test.js && node tests/product.slug.test.js"
+    "migrate:catalog": "node migrations/002-relational-catalog.js",
+    "test": "node tests/middlewares.test.js && node tests/product.slug.test.js && node tests/catalog.relations.test.js"
   },
   "keywords": ["api", "rest", "express", "mongodb", "swagger", "futbol"],
   "license": "MIT",

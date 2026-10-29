@@ -7,6 +7,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const productRoutes = require('./routes/product.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const createCatalogRouter = require('./routes/catalog.routes');
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
@@ -37,7 +38,7 @@ app.get('/', (req, res) => {
     success: true,
     message: 'API de Productos de Fútbol',
     docs: '/api-docs',
-    endpoints: '/api/products'
+    endpoints: ['/api/categories', '/api/brands', '/api/products', '/api/variants', '/api/images']
   });
 });
 
@@ -47,6 +48,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
 
 app.use('/api/products', productRoutes);
+app.use('/api/categories', createCatalogRouter('categories'));
+app.use('/api/brands', createCatalogRouter('brands'));
+app.use('/api/variants', createCatalogRouter('variants'));
+app.use('/api/images', createCatalogRouter('images'));
 app.use('/api/dashboard', dashboardRoutes);
 
 app.use(notFoundHandler);

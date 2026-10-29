@@ -1,137 +1,107 @@
-# ⚽ API REST de Productos de Fútbol
+# Football Shop Backend
 
-API REST para gestionar un catálogo de productos de fútbol (camisetas, botas, balones, equipamiento y accesorios).
+API REST para el catálogo de una tienda de fútbol. Usa Node.js, Express, MongoDB y Mongoose con arquitectura route → middleware → controller → service → repository → model.
 
-**Stack:** Node.js · Express · MongoDB · Mongoose · Zod · Helmet · Morgan · Swagger/OpenAPI · CORS
+## Requisitos e instalación
 
-## Arquitectura
-
-```
-football-products-api/
-├── config/          # Conexión a MongoDB y configuración de Swagger
-├── routes/          # Endpoints (+ anotaciones Swagger) y validate() por ruta
-├── validators/      # Esquemas Zod por endpoint ({ body, params, query })
-├── middlewares/     # validate.middleware y error.middleware (404 + errorHandler)
-├── controllers/     # Entrada/salida HTTP
-├── services/        # Validaciones, reglas de negocio y orquestación
-├── repositories/    # Acceso a MongoDB
-├── models/          # Esquemas Mongoose
-├── utils/           # AppError, slugify y helpers
-├── app.js           # Configuración de Express
-├── server.js        # Arranque del servidor
-├── seed.js          # Datos de ejemplo
-├── .env.example
-├── Postman.md
-└── package.json
-```
-
-Flujo: `route → validate (Zod) → controller → service → repository → model (MongoDB)`.
-
-## Requisitos
-
-* Node.js 18 o superior
-* MongoDB en local (`mongodb://127.0.0.1:27017`) o una URI de MongoDB Atlas
-
-## Instalación
+- Node.js 18 o superior
+- MongoDB local o MongoDB Atlas
 
 ```bash
 npm install
 ```
 
-## Configuración
-
-Se incluye un `.env` listo para desarrollo local. Si no existe, cópialo desde el ejemplo:
+Configura `MONGODB_URI` en `.env` (por defecto, `mongodb://127.0.0.1:27017/football_products`) y arranca la API:
 
 ```bash
-cp .env.example .env
+npm start
+npm run dev
 ```
 
-| Variable      | Descripción                                             | Valor por defecto                              |
-|---------------|---------------------------------------------------------|------------------------------------------------|
-| `PORT`        | Puerto del servidor                                     | `3000`                                         |
-| `MONGODB_URI` | URI de conexión a MongoDB                               | `mongodb://127.0.0.1:27017/football_products`  |
-| `CORS_ORIGIN` | Orígenes permitidos (separados por comas) o `*`         | `*`                                            |
-| `NODE_ENV`    | `development` o `production`                            | `development`                                  |
+- API: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api-docs`
+- OpenAPI JSON: `http://localhost:3000/api-docs.json`
 
-## Ejecución
+## Migración desde el modelo anterior
+
+La estructura de productos cambió de forma incompatible: `category` y `brand` ahora son referencias, y `price`, `stock`, `team` y `size` se guardan en variantes.
+
+Haz una copia de seguridad de MongoDB y ejecuta la migración **antes** de desplegar esta versión:
 
 ```bash
-npm start        # producción
-npm run dev      # desarrollo con recarga automática (nodemon)
+npm run migrate:catalog
 ```
 
-* API: http://localhost:3000/api/products
-* Swagger UI: http://localhost:3000/api-docs
-* Especificación OpenAPI (JSON): http://localhost:3000/api-docs.json
-* Health check: http://localhost:3000/health
+La migración crea las categorías y marcas a partir de los datos existentes, convierte cada producto en una referencia relacional y crea una variante inicial con su precio, stock, talla y equipo. Es repetible para registros ya convertidos. Si la base de datos aún no tiene `slug`, ejecuta también `npm run migrate:slug` antes de la migración de catálogo.
 
-## Seed (datos de ejemplo)
+## Esquema
+
+- **Category**: nombre, slug, descripción, estado y visibilidad.
+- **Brand**: nombre, slug, estado y visibilidad.
+- **Product**: `category_id` y `brand_id` (`ObjectId`), nombre, slug, descripción, estado y visibilidad.
+- **Variant**: `product_id`, SKU único, precio decimal, stock entero, atributos y variante predeterminada.
+- **Image**: URL, metadatos y asociación polimórfica a producto, variante, marca o categoría.
+- **Role / User**: roles y usuarios; `role_id` referencia a `Role` y `password_hash` nunca se devuelve en las respuestas.
+
+Las lecturas de repositorio cargan las relaciones con `populate()`. Los servicios verifican las referencias antes de guardar y evitan borrar registros que todavía tienen dependencias.
+
+## Endpoints
+
+| Método | Ruta | Uso |
+|---|---|---|
+| `GET`, `POST` | `/api/categories` | Listar y crear categorías |
+| `GET`, `PUT`, `DELETE` | `/api/categories/:id` | Consultar y gestionar una categoría |
+| `GET`, `POST` | `/api/brands` | Listar y crear marcas |
+| `GET`, `PUT`, `DELETE` | `/api/brands/:id` | Consultar y gestionar una marca |
+| `GET`, `POST` | `/api/products` | Listar y crear productos |
+| `GET`, `PUT`, `DELETE` | `/api/products/:id` | Consultar y gestionar un producto |
+| `GET`, `PUT` | `/api/products/slug/:slug` | Consultar o actualizar por slug |
+| `PATCH` | `/api/products/slug/:slug/soft-delete` | Borrado lógico |
+| `PATCH` | `/api/products/slug/:slug/is-active` | Cambiar visibilidad |
+| `GET`, `POST` | `/api/variants` | Listar y crear variantes |
+| `GET`, `PUT`, `DELETE` | `/api/variants/:id` | Consultar y gestionar una variante |
+| `GET`, `POST` | `/api/images` | Listar y asociar imágenes |
+| `GET`, `PUT`, `DELETE` | `/api/images/:id` | Consultar y gestionar una imagen |
+| `GET` | `/api/dashboard/stats` | Estadísticas del catálogo |
+
+Los IDs de relación se validan como `ObjectId` y la entidad asociada debe existir. Por ejemplo, para crear un producto:
+
+```json
+{
+  "name": "Camiseta FC Barcelona",
+  "category_id": "66b1f0c2a4d3e5f6a7b8c9d0",
+  "brand_id": "66b1f0c2a4d3e5f6a7b8c9d1",
+  "description": "Camiseta oficial de local.",
+  "status": "active"
+}
+```
+
+Después crea su variante en `POST /api/variants`:
+
+```json
+{
+  "product_id": "66b1f0c2a4d3e5f6a7b8c9d2",
+  "name": "Talla M",
+  "sku": "FCB-HOME-M",
+  "price": 99.95,
+  "stock": 25,
+  "attributes": { "size": "M", "team": "FC Barcelona" },
+  "is_default": true
+}
+```
+
+Los precios se almacenan como `Decimal128` y se devuelven como texto decimal para conservar su precisión. El seed inicial es idempotente y no borra datos:
 
 ```bash
 npm run seed
 ```
 
-⚠️ Elimina todos los productos existentes e inserta 15 productos de ejemplo.
+## Pruebas y errores
 
-## Endpoints
-
-| Método | Ruta                 | Descripción                       |
-|--------|----------------------|-----------------------------------|
-| POST   | `/api/products`      | Crear producto                    |
-| GET    | `/api/products`      | Listar productos (filtros y paginación) |
-| GET    | `/api/products/:id`  | Obtener producto por ID           |
-| PUT    | `/api/products/:id`  | Actualizar producto (parcial)     |
-| DELETE | `/api/products/:id`  | Eliminar producto (físico)        |
-| GET    | `/api/products/slug/:slug` | Obtener producto por slug   |
-| PUT    | `/api/products/slug/:slug` | Actualizar por slug (si cambia `name`, se regenera el slug) |
-| PATCH  | `/api/products/slug/:slug/is-active` | Activar/desactivar. Body `{ "isActive": boolean }` |
-| PATCH  | `/api/products/slug/:slug/soft-delete` | Borrado lógico (`deletedAt`) |
-| GET    | `/api/dashboard/stats` | Estadísticas del catálogo (totales, agotados, valor del inventario, por categoría) |
-
-Los productos con `deletedAt` no aparecen en listados ni consultas. El slug se genera desde `name` (`slug`, `slug-2`…) y `new` está reservado.
-
-**Migración (BD existente):** `npm run migrate:slug` rellena `slug`, `deletedAt` e `isActive`; ejecútala antes de arrancar (se puede repetir sin problema). `GET /api/products` acepta `?isActive=true|false`.
-
-### Modelo de producto
-
-| Campo         | Tipo    | Reglas                                                             |
-|---------------|---------|--------------------------------------------------------------------|
-| `name`        | String  | Obligatorio, 2–150 caracteres                                      |
-| `category`    | String  | `Camisetas`, `Botas`, `Balones`, `Equipamiento`, `Accesorios`      |
-| `team`        | String  | Obligatorio (`N/A` si no aplica)                                   |
-| `price`       | Number  | Obligatorio, ≥ 0                                                   |
-| `stock`       | Integer | Obligatorio, ≥ 0                                                   |
-| `brand`       | String  | Obligatorio                                                        |
-| `size`        | String  | Obligatorio (`S`, `M`, `L`, `XL`, `Talla 5`, `42`...)              |
-| `description` | String  | Obligatorio, máx. 1000 caracteres                                  |
-
-### Parámetros de listado
-
-`category`, `team`, `brand`, `search`, `minPrice`, `maxPrice`, `sortBy` (`name|price|stock|createdAt`), `order` (`asc|desc`), `page`, `limit` (máx. 100).
-
-Ejemplo: `GET /api/products?category=Botas&brand=Nike&minPrice=100&sortBy=price&order=asc`
-
-## Formato de errores
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Datos de entrada no válidos",
-    "details": [{ "field": "body.price", "message": "El precio debe ser un número mayor o igual a 0" }]
-  }
-}
+```bash
+npm test
 ```
 
-`details` solo aparece en errores de validación. Códigos: `VALIDATION_ERROR` (400) · `INVALID_JSON` (400) · `NOT_FOUND` (404) · `DUPLICATE_KEY` (409) · `INTERNAL_ERROR` / `DATABASE_ERROR` (500).
-En `production` los 500 devuelven siempre "Error interno del servidor"; en `development` incluyen `stack`.
+Las respuestas de error siguen `{ "success": false, "error": { "code": "...", "message": "..." } }`. Las relaciones inexistentes responden `404`; los registros relacionados que impiden borrar responden `409`; los datos inválidos responden `400`.
 
-## Logging y seguridad
-
-* `helmet()` con configuración por defecto (primer middleware).
-* `morgan`: `dev` en development, `combined` en production, desactivado con `NODE_ENV=test`.
-
-## Documentación de requests
-
-Consulta [`Postman.md`](./Postman.md) para ejemplos de requests y responses.
+Las rutas de roles y usuarios no se exponen públicamente. No se debe habilitar su gestión HTTP hasta incorporar autenticación y autorización.

@@ -9,6 +9,7 @@ const db = [];
 let failNextCreateWithCollision = false;
 let statsRaw = null;
 const live = (d) => d.deletedAt === null;
+const fakeCatalogRepository = { exists: async () => true };
 
 const fakeRepo = {
   findAll: async () => db.filter(live),
@@ -35,13 +36,19 @@ const fakeRepo = {
 const origLoad = Module._load;
 Module._load = function (request, ...rest) {
   if (request === '../repositories/product.repository') return fakeRepo;
+  if (request === '../repositories/catalog.repository') return fakeCatalogRepository;
   if (request === 'slugify') return (t) => t.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   return origLoad.call(this, request, ...rest);
 };
 
 const svc = require(path.join(__dirname, '..', 'services/product.service'));
 const dashboard = require(path.join(__dirname, '..', 'services/dashboard.service'));
-const base = { name: 'Balon Oficial', category: 'Balones', team: 'N/A', price: 10, stock: 1, brand: 'Puma', size: '5', description: 'x' };
+const base = {
+  name: 'Balon Oficial',
+  category_id: 'category-id',
+  brand_id: 'brand-id',
+  description: 'x'
+};
 const fails = async (fn, status) => {
   try { await fn(); } catch (e) { assert.strictEqual(e.statusCode, status, e.message); return; }
   assert.fail(`Se esperaba error ${status}`);
