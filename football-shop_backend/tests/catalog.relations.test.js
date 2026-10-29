@@ -37,8 +37,30 @@ const fakeRepository = {
 };
 
 const originalLoad = Module._load;
+const repositoryTypes = {
+  '../repositories/category.repository': 'categories',
+  '../repositories/brand.repository': 'brands',
+  '../repositories/variant.repository': 'variants',
+  '../repositories/image.repository': 'images',
+  '../repositories/role.repository': 'roles',
+  '../repositories/user.repository': 'users'
+};
 Module._load = function (request, ...rest) {
   if (request === '../repositories/catalog.repository') return fakeRepository;
+  if (repositoryTypes[request]) {
+    const type = repositoryTypes[request];
+    return {
+      findAll: (options) => fakeRepository.findAll(type, options),
+      findById: (id) => fakeRepository.findById(type, id),
+      create: (data) => fakeRepository.create(type, data),
+      updateById: (id, data) => fakeRepository.updateById(type, id, data),
+      deleteById: (id) => fakeRepository.deleteById(type, id),
+      exists: (id) => fakeRepository.exists(type, id),
+      existsBySlug: (slug, excludeId) => fakeRepository.existsBySlug(type, slug, excludeId),
+      hasReferences: (id) => fakeRepository.hasReferences(type, id),
+      findDuplicateFlag: (filter, excludeId) => fakeRepository.findDuplicateFlag(type, filter, excludeId)
+    };
+  }
   if (request === '../utils/slugify') {
     return {
       generateUniqueSlug: async (name) => name.toLowerCase().replace(/\s+/g, '-')

@@ -104,4 +104,4 @@ npm test
 
 Las respuestas de error siguen `{ "success": false, "error": { "code": "...", "message": "..." } }`. Las relaciones inexistentes responden `404`; los registros relacionados que impiden borrar responden `409`; los datos inválidos responden `400`.
 
-Las rutas de roles y usuarios no se exponen públicamente. No se debe habilitar su gestión HTTP hasta incorporar autenticación y autorización.
+Cada modelo tiene capas de repository, service y route propias; las capas de categorías, marcas, variantes e imágenes delegan en la implementación común del catálogo para conservar sus validaciones y reglas de relaciones. Las rutas de `Role` y `User` están definidas, pero no se montan en `app.js`: no se debe habilitar su gestión HTTP hasta incorporar autenticación y autorización.

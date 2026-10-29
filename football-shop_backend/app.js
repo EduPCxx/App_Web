@@ -7,7 +7,10 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const productRoutes = require('./routes/product.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
-const createCatalogRouter = require('./routes/catalog.routes');
+const categoryRoutes = require('./routes/category.routes');
+const brandRoutes = require('./routes/brand.routes');
+const variantRoutes = require('./routes/variant.routes');
+const imageRoutes = require('./routes/image.routes');
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
@@ -48,10 +51,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
 
 app.use('/api/products', productRoutes);
-app.use('/api/categories', createCatalogRouter('categories'));
-app.use('/api/brands', createCatalogRouter('brands'));
-app.use('/api/variants', createCatalogRouter('variants'));
-app.use('/api/images', createCatalogRouter('images'));
+app.use('/api/categories', categoryRoutes);
+app.use('/api/brands', brandRoutes);
+app.use('/api/variants', variantRoutes);
+app.use('/api/images', imageRoutes);
+// User and role routes remain unmounted until authentication and authorization are available.
 app.use('/api/dashboard', dashboardRoutes);
 
 app.use(notFoundHandler);

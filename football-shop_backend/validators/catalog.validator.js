@@ -37,10 +37,24 @@ const imageFields = {
   status: status.optional(),
   isActive: z.boolean().optional()
 };
+const roleFields = {
+  name: text(100),
+  description: z.string().trim().max(500).optional(),
+  status: status.optional(),
+  isActive: z.boolean().optional()
+};
+const userFields = {
+  role_id: objectId,
+  name: text(150),
+  email: z.string().trim().email(),
+  password: z.string().min(8).max(128),
+  isActive: z.boolean().optional(),
+  status: status.optional()
+};
 
-const makeBodySchemas = (fields) => ({
+const makeBodySchemas = (fields, updateFields = fields) => ({
   create: z.object(fields),
-  update: z.object(fields).partial().refine((data) => Object.keys(data).length > 0, {
+  update: z.object(updateFields).partial().refine((data) => Object.keys(data).length > 0, {
     message: 'Debes enviar al menos un campo para actualizar'
   })
 });
@@ -50,9 +64,11 @@ const schemas = Object.fromEntries(
     categories: categoryFields,
     brands: brandFields,
     variants: variantFields,
-    images: imageFields
+    images: imageFields,
+    roles: roleFields,
+    users: userFields
   }).map(([type, fields]) => {
-    const body = makeBodySchemas(fields);
+    const body = makeBodySchemas(fields, type === 'users' ? { ...userFields, password: z.string().min(8).max(128).optional() } : fields);
     return [
       type,
       {

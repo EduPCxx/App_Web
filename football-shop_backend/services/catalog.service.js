@@ -1,7 +1,33 @@
 const crypto = require('crypto');
 const catalogRepository = require('../repositories/catalog.repository');
+const categoryRepository = require('../repositories/category.repository');
+const brandRepository = require('../repositories/brand.repository');
+const variantRepository = require('../repositories/variant.repository');
+const imageRepository = require('../repositories/image.repository');
+const roleRepository = require('../repositories/role.repository');
+const userRepository = require('../repositories/user.repository');
 const AppError = require('../utils/AppError');
 const { generateUniqueSlug } = require('../utils/slugify');
+
+const repositories = {
+  categories: categoryRepository,
+  brands: brandRepository,
+  variants: variantRepository,
+  images: imageRepository,
+  roles: roleRepository,
+  users: userRepository
+};
+const repositoryFor = (type) => repositories[type] || {
+  findAll: (options) => catalogRepository.findAll(type, options),
+  findById: (id) => catalogRepository.findById(type, id),
+  create: (data) => catalogRepository.create(type, data),
+  updateById: (id, data) => catalogRepository.updateById(type, id, data),
+  deleteById: (id) => catalogRepository.deleteById(type, id),
+  exists: (id) => catalogRepository.exists(type, id),
+  existsBySlug: (slug, excludeId) => catalogRepository.existsBySlug(type, slug, excludeId),
+  hasReferences: (id) => catalogRepository.hasReferences(type, id),
+  findDuplicateFlag: (filter, excludeId) => catalogRepository.findDuplicateFlag(type, filter, excludeId)
+};
 
 const entityModels = {
   product: ['Product', 'products'],
@@ -16,17 +42,17 @@ const sluggedTypes = ['categories', 'brands'];
 const decimalNumber = (value) => Number(value && typeof value.toString === 'function' ? value.toString() : value);
 
 const assertRelations = async (type, data) => {
-  if (type === 'variants' && data.product_id && !(await catalogRepository.exists('products', data.product_id))) {
+  if (type === 'variants' && data.product_id && !(await repositoryFor('products').exists(data.product_id))) {
     throw invalidRelation('El producto');
   }
   if (type === 'images' && data.entity_type && data.entity_id) {
     const mapped = entityModels[data.entity_type];
-    if (!mapped || !(await catalogRepository.exists(mapped[1], data.entity_id))) throw invalidRelation('La entidad asociada');
+    if (!mapped || !(await repositoryFor(mapped[1]).exists(data.entity_id))) throw invalidRelation('La entidad asociada');
     data.entity_model = mapped[0];
   } else if (type === 'images' && data.entity_type) {
     data.entity_model = entityModels[data.entity_type][0];
   }
-  if (type === 'users' && data.role_id && !(await catalogRepository.exists('roles', data.role_id))) {
+  if (type === 'users' && data.role_id && !(await repositoryFor('roles').exists(data.role_id))) {
     throw invalidRelation('El rol');
   }
 };
@@ -42,12 +68,14 @@ const assertUniqueFlags = async (type, data, excludeId) => {
     throw new AppError('El precio anterior debe ser igual o superior al precio actual', 400, 'VALIDATION_ERROR');
   }
   if (type === 'variants' && data.is_default) {
-    const duplicate = await catalogRepository.findDuplicateFlag('variants', { product_id: data.product_id, is_default: true }, excludeId);
+    const duplicate = await repositoryFor('variants').findDuplicateFlag(
+      { product_id: data.product_id, is_default: true },
+      excludeId
+    );
     if (duplicate) throw conflict('El producto ya tiene una variante predeterminada');
   }
   if (type === 'images' && data.is_primary) {
-    const duplicate = await catalogRepository.findDuplicateFlag(
-      'images',
+    const duplicate = await repositoryFor('images').findDuplicateFlag(
       { entity_type: data.entity_type, entity_id: data.entity_id, is_primary: true },
       excludeId
     );
@@ -57,13 +85,13 @@ const assertUniqueFlags = async (type, data, excludeId) => {
 
 const withSlug = async (type, data, excludeId) => {
   if (!sluggedTypes.includes(type) || !data.name) return data;
-  const candidate = await generateUniqueSlug(data.name, (slug) => catalogRepository.existsBySlug(type, slug, excludeId));
+  const candidate = await generateUniqueSlug(data.name, (slug) => repositoryFor(type).existsBySlug(slug, excludeId));
   return { ...data, slug: candidate };
 };
 
-const list = (type, options) => catalogRepository.findAll(type, options);
+const list = (type, options) => repositoryFor(type).findAll(options);
 const getById = async (type, id) => {
-  const document = await catalogRepository.findById(type, id);
+  const document = await repositoryFor(type).findById(id);
   if (!document) throw notFound(type);
   return document;
 };
@@ -76,7 +104,7 @@ const create = async (type, data) => {
     payload.password_hash = await hashPassword(payload.password);
     delete payload.password;
   }
-  return catalogRepository.create(type, await withSlug(type, payload));
+  return repositoryFor(type).create(await withSlug(type, payload));
 };
 
 const update = async (type, id, data) => {
@@ -108,17 +136,17 @@ const update = async (type, id, data) => {
     const renamed = await withSlug(type, payload, id);
     Object.assign(payload, renamed);
   }
-  const document = await catalogRepository.updateById(type, id, payload);
+  const document = await repositoryFor(type).updateById(id, payload);
   if (!document) throw notFound(type);
   return document;
 };
 
 const remove = async (type, id) => {
   const current = await getById(type, id);
-  if (await catalogRepository.hasReferences(type, id)) {
+  if (await repositoryFor(type).hasReferences(id)) {
     throw conflict(`No se puede eliminar ${type}: existen registros relacionados`);
   }
-  return catalogRepository.deleteById(type, current._id);
+  return repositoryFor(type).deleteById(current._id);
 };
 
 const hashPassword = async (password) => {
