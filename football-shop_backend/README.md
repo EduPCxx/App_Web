@@ -55,9 +55,9 @@ Las lecturas de repositorio cargan las relaciones con `populate()`. Los servicio
 | `GET`, `PUT`, `DELETE` | `/api/brands/:id` | Consultar y gestionar una marca |
 | `GET`, `POST` | `/api/products` | Listar y crear productos |
 | `GET`, `PUT`, `DELETE` | `/api/products/:id` | Consultar y gestionar un producto |
-| `GET`, `PUT` | `/api/products/slug/:slug` | Consultar o actualizar por slug |
-| `PATCH` | `/api/products/slug/:slug/soft-delete` | Borrado lógico |
-| `PATCH` | `/api/products/slug/:slug/is-active` | Cambiar visibilidad |
+| `PATCH` | `/api/products/:id/soft-delete` | Borrado lógico por ID |
+| `PATCH` | `/api/products/:id/is-active` | Cambiar visibilidad por ID |
+| `GET`, `PUT`, `PATCH` | `/api/products/slug/:slug...` | Endpoints antiguos compatibles por slug |
 | `GET`, `POST` | `/api/variants` | Listar y crear variantes |
 | `GET`, `PUT`, `DELETE` | `/api/variants/:id` | Consultar y gestionar una variante |
 | `GET`, `POST` | `/api/images` | Listar y asociar imágenes |

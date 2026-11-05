@@ -103,8 +103,20 @@ const softDeleteProductBySlug = async (slug) => {
   return product;
 };
 
+const softDeleteProduct = async (id) => {
+  const product = await productRepository.softDeleteById(id);
+  if (!product) throw notFound();
+  return product;
+};
+
 const setProductActiveBySlug = async (slug, isActive) => {
   const product = await productRepository.setActiveBySlug(slug, isActive);
+  if (!product) throw notFound();
+  return product;
+};
+
+const setProductActive = async (id, isActive) => {
+  const product = await productRepository.setActiveById(id, isActive);
   if (!product) throw notFound();
   return product;
 };
@@ -126,6 +138,8 @@ module.exports = {
   updateProduct,
   updateProductBySlug,
   deleteProduct,
+  softDeleteProduct,
   softDeleteProductBySlug,
+  setProductActive,
   setProductActiveBySlug
 };

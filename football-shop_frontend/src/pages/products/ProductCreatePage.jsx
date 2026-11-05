@@ -12,7 +12,7 @@ export default function ProductCreatePage() {
     const created = await createProduct(values);
     if (!created) return; // el error ya se ha mostrado con SweetAlert2
     notifySuccess('Producto creado');
-    navigate(`/products/${created.slug}`);
+    navigate('/products');
   };
 
   return (

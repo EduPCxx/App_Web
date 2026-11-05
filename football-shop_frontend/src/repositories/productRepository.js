@@ -1,13 +1,13 @@
 import { apiService } from '@/services/apiService';
 
-// Capa de datos: solo HTTP. Todas las rutas de producto usan el slug.
-const bySlug = (slug) => `/products/slug/${encodeURIComponent(slug)}`;
+// Capa de datos: solo HTTP. Las operaciones de producto se identifican por ID.
+const byId = (id) => `/products/${encodeURIComponent(id)}`;
 
 export const productRepository = {
   list: async (params) => (await apiService.get('/products', { params })).data,
-  getBySlug: async (slug) => (await apiService.get(bySlug(slug))).data,
+  getById: async (id) => (await apiService.get(byId(id))).data,
   create: async (payload) => (await apiService.post('/products', payload)).data,
-  updateBySlug: async (slug, payload) => (await apiService.put(bySlug(slug), payload)).data,
-  setActiveBySlug: async (slug, isActive) => (await apiService.patch(`${bySlug(slug)}/is-active`, { isActive })).data,
-  softDeleteBySlug: async (slug) => (await apiService.patch(`${bySlug(slug)}/soft-delete`)).data
+  updateById: async (id, payload) => (await apiService.put(byId(id), payload)).data,
+  setActiveById: async (id, isActive) => (await apiService.patch(`${byId(id)}/is-active`, { isActive })).data,
+  softDeleteById: async (id) => (await apiService.patch(`${byId(id)}/soft-delete`)).data
 };

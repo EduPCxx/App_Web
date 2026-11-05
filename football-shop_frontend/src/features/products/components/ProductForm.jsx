@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
@@ -7,7 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CATEGORIES, EMPTY_PRODUCT, productSchema } from '@/features/products/productSchema';
+import { EMPTY_PRODUCT, productSchema } from '@/features/products/productSchema';
+import { brandService } from '@/services/brandService';
+import { categoryService } from '@/services/categoryService';
+import { notifyError } from '@/utils/alerts';
 
 function Field({ id, label, error, className, children }) {
   return (
@@ -28,11 +32,33 @@ function Field({ id, label, error, className, children }) {
 // Formulario controlado por react-hook-form + Zod. `onSubmit` debe devolver una promesa:
 // así `isSubmitting` deshabilita el botón mientras se guarda.
 export default function ProductForm({ initialValues = EMPTY_PRODUCT, onSubmit, submitLabel = 'Guardar', cancelTo = '/products' }) {
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [loadingRelations, setLoadingRelations] = useState(true);
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting }
   } = useForm({ resolver: zodResolver(productSchema), defaultValues: initialValues });
+
+  useEffect(() => {
+    let ignore = false;
+    Promise.all([categoryService.list(), brandService.list()])
+      .then(([categoryItems, brandItems]) => {
+        if (ignore) return;
+        setCategories(categoryItems);
+        setBrands(brandItems);
+      })
+      .catch(async (error) => {
+        if (!ignore) await notifyError(error, 'No se pudieron cargar categorías y marcas');
+      })
+      .finally(() => {
+        if (!ignore) setLoadingRelations(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const field = (name) => ({
     id: name,
@@ -49,47 +75,45 @@ export default function ProductForm({ initialValues = EMPTY_PRODUCT, onSubmit, s
         </Field>
 
         <div className="grid gap-6 sm:grid-cols-2">
-          <Field id="category" label="Categoría" error={errors.category?.message}>
-            <Select {...field('category')}>
+          <Field id="category_id" label="Categoría" error={errors.category_id?.message}>
+            <Select {...field('category_id')} disabled={loadingRelations}>
               <option value="">Selecciona…</option>
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
+              {categories.map((category) => (
+                <option key={category._id} value={category._id}>
+                  {category.name}
                 </option>
               ))}
             </Select>
           </Field>
-          <Field id="team" label="Equipo" error={errors.team?.message}>
-            <Input {...field('team')} placeholder="N/A si no aplica" />
+          <Field id="brand_id" label="Marca" error={errors.brand_id?.message}>
+            <Select {...field('brand_id')} disabled={loadingRelations}>
+              <option value="">Selecciona…</option>
+              {brands.map((brand) => (
+                <option key={brand._id} value={brand._id}>
+                  {brand.name}
+                </option>
+              ))}
+            </Select>
           </Field>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2">
-          <Field id="brand" label="Marca" error={errors.brand?.message}>
-            <Input {...field('brand')} placeholder="Nike" />
+          <Field id="status" label="Estado" error={errors.status?.message}>
+            <Select {...field('status')}>
+              <option value="draft">Borrador</option>
+              <option value="active">Activo</option>
+              <option value="archived">Archivado</option>
+            </Select>
           </Field>
-          <Field id="size" label="Talla / tamaño" error={errors.size?.message}>
-            <Input {...field('size')} placeholder="M, 42, Talla 5…" />
-          </Field>
-        </div>
-
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Field id="price" label="Precio (€)" error={errors.price?.message}>
-            <Input {...field('price')} type="number" step="0.01" min="0" inputMode="decimal" placeholder="0,00" />
-          </Field>
-          <Field id="stock" label="Stock" error={errors.stock?.message}>
-            <Input {...field('stock')} type="number" step="1" min="0" inputMode="numeric" placeholder="0" />
-          </Field>
+          <label htmlFor="isActive" className="flex cursor-pointer items-center gap-3 self-end text-sm font-semibold">
+            <input id="isActive" type="checkbox" className="h-4 w-4 rounded accent-primary" {...register('isActive')} />
+            Producto activo
+          </label>
         </div>
 
         <Field id="description" label="Descripción" error={errors.description?.message}>
           <Textarea {...field('description')} placeholder="Describe el producto…" />
         </Field>
-
-        <label htmlFor="isActive" className="flex cursor-pointer items-center gap-3 text-sm font-semibold">
-          <input id="isActive" type="checkbox" className="h-4 w-4 rounded accent-primary" {...register('isActive')} />
-          Producto activo
-        </label>
 
         <div className="flex justify-end gap-2 border-t pt-6">
           <Button asChild variant="outline">

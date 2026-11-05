@@ -28,24 +28,23 @@ const smoothPath = (points) => {
 
 function MetricTile({ label, value, icon: Icon, tone, to }) {
   const tones = {
-    gold: 'from-[#63502a] via-[#79602e] to-[#403724]',
-    charcoal: 'from-[#303136] via-[#27282d] to-[#25252a]',
-    muted: 'from-[#292a2f] via-[#303034] to-[#242428]'
+    gold: 'border-[#d8b563]/40 bg-[#191919]',
+    charcoal: 'border-white/10 bg-[#171717]',
+    muted: 'border-white/10 bg-[#141414]'
   };
   const content = (
-    <div className={`group relative flex min-h-[104px] items-center justify-between overflow-hidden rounded-2xl border border-white/[0.12] bg-gradient-to-br ${tones[tone]} p-4 shadow-[0_16px_38px_-24px_rgba(0,0,0,0.8)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200/30 sm:min-h-[116px] sm:p-5`}>
+    <div className={`group relative flex min-h-[104px] items-center justify-between overflow-hidden rounded-2xl border ${tones[tone]} p-4 shadow-soft transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-[#d8b563]/60 sm:min-h-[116px] sm:p-5`}>
       <div className="relative z-10 min-w-0">
-        <p className="text-[9px] font-bold uppercase tracking-[0.17em] text-amber-100/65 sm:text-[10px]">{label}</p>
-        <p className="mt-2 text-2xl font-bold tracking-tight text-white tabular-nums sm:text-3xl">{value}</p>
+        <p className="text-[9px] font-bold uppercase tracking-[0.17em] text-white/60 sm:text-[10px]">{label}</p>
+        <p className="mt-2 text-2xl font-semibold tracking-tight text-white tabular-nums sm:text-3xl">{value}</p>
       </div>
-      <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-100/[0.14] bg-black/[0.12] text-amber-100 shadow-inner sm:h-11 sm:w-11">
+      <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#d8b563]/25 bg-[#111111] text-[#f5d789] shadow-[0_12px_24px_-18px_rgba(245,215,137,0.9)] sm:h-11 sm:w-11">
         <Icon size={19} aria-hidden="true" />
       </span>
-      <span className="absolute -bottom-12 -right-7 h-28 w-28 rounded-full bg-white/[0.06] blur-2xl transition group-hover:bg-white/[0.1]" />
       {to && <FiArrowUpRight className="absolute right-3 top-3 text-white/35 transition group-hover:text-white/90" size={14} aria-hidden="true" />}
     </div>
   );
-  return to ? <Link to={to} className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">{content}</Link> : content;
+  return to ? <Link to={to} className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--gold))]">{content}</Link> : content;
 }
 
 function CategoryChart({ items }) {
@@ -68,20 +67,20 @@ function CategoryChart({ items }) {
     : '';
 
   return (
-    <Card className="overflow-hidden rounded-[1.4rem] border-white/[0.09] bg-[#1b1b1d]/90 shadow-[0_24px_70px_-46px_rgba(0,0,0,0.8)]">
+    <Card className="overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#111111] shadow-soft">
       <div className="flex items-center justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6">
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-200/60">Actividad de catálogo</p>
-          <h3 className="mt-1 text-sm font-bold text-slate-100 sm:text-base">Productos por categoría</h3>
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#f5d789]">Actividad de catálogo</p>
+          <h3 className="mt-1 text-sm font-semibold text-white sm:text-base">Productos por categoría</h3>
         </div>
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-200/10 bg-amber-300/[0.08] text-amber-200">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#d8b563]/30 bg-[#1a1a1a] text-[#f5d789]">
           <FiActivity size={17} aria-hidden="true" />
         </span>
       </div>
 
       <div className="px-3 pb-3 pt-1 sm:px-5 sm:pb-4">
         {points.length === 0 ? (
-          <p className="m-2 rounded-xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-slate-400">
+          <p className="m-2 rounded-xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-white/55">
             Todavía no hay productos para mostrar.
           </p>
         ) : (
@@ -91,35 +90,20 @@ function CategoryChart({ items }) {
             role="img"
             aria-label={`Productos por categoría: ${categories.map(({ category, count }) => `${category}, ${count}`).join('; ')}`}
           >
-            <defs>
-              <linearGradient id="chart-stroke" x1="0" x2="1" y1="0" y2="0">
-                <stop offset="0%" stopColor="#b58a3a" />
-                <stop offset="55%" stopColor="#e0bd69" />
-                <stop offset="100%" stopColor="#f4dfa1" />
-              </linearGradient>
-              <linearGradient id="chart-area" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#d7ae55" stopOpacity="0.22" />
-                <stop offset="100%" stopColor="#d7ae55" stopOpacity="0" />
-              </linearGradient>
-              <filter id="chart-glow" x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur stdDeviation="4" result="blur" />
-                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-              </filter>
-            </defs>
             {[top, top + (bottom - top) / 3, top + (2 * (bottom - top)) / 3, bottom].map((y) => (
-              <line key={y} x1={left} x2={right} y1={y} y2={y} stroke="#d7c18d" strokeOpacity="0.12" strokeDasharray="3 8" />
+              <line key={y} x1={left} x2={right} y1={y} y2={y} stroke="#ffffff" strokeOpacity="0.08" strokeDasharray="3 8" />
             ))}
-            {area && <path d={area} fill="url(#chart-area)" />}
+            {area && <path d={area} fill="#d8b563" fillOpacity="0.12" />}
             {points.length > 1 && (
-              <path d={line} fill="none" stroke="url(#chart-stroke)" strokeWidth="3.5" strokeLinecap="round" filter="url(#chart-glow)" />
+              <path d={line} fill="none" stroke="#d8b563" strokeWidth="3.5" strokeLinecap="round" />
             )}
             {points.map(({ category, count, x, y }, index) => (
               <g key={category}>
-                <circle cx={x} cy={y} r="9" fill="#23221e" stroke={index % 2 ? '#edcf82' : '#bd9142'} strokeWidth="3" />
-                <text x={x} y={Math.max(top + 10, y - 16)} textAnchor="middle" fill="#f3eee1" className="text-[12px] font-semibold">
+                <circle cx={x} cy={y} r="9" fill="#101010" stroke={index % 2 ? '#f0d38a' : '#b78b36'} strokeWidth="3" />
+                <text x={x} y={Math.max(top + 10, y - 16)} textAnchor="middle" fill="#f5f6f7" className="text-[12px] font-semibold">
                   {count}
                 </text>
-                <text x={x} y="222" textAnchor="middle" fill="#aaa69c" className="text-[10px]">
+                <text x={x} y="222" textAnchor="middle" fill="#d3d3d3" className="text-[10px]">
                   {category.length > 13 ? `${category.slice(0, 12)}…` : category}
                 </text>
               </g>
@@ -173,46 +157,46 @@ function InventoryPanel({ stats }) {
   ];
 
   return (
-    <Card className="overflow-hidden rounded-[1.4rem] border-white/[0.09] bg-[#1a1a1b]/95 shadow-[0_24px_70px_-46px_rgba(0,0,0,0.82)]">
-      <div className="border-b border-white/[0.08] px-5 py-5 sm:px-6">
+    <Card className="overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#111111] shadow-soft">
+      <div className="border-b border-white/10 px-5 py-5 sm:px-6">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-200/10 bg-gradient-to-br from-amber-200/15 to-yellow-700/15 text-amber-100">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d8b563]/30 bg-[#1a1a1a] text-[#f5d789]">
             <IoFootballOutline size={20} aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-slate-100">Football Shop</p>
-            <p className="mt-0.5 text-[10px] text-slate-500">Resumen de inventario</p>
+            <p className="text-xs font-semibold text-white">Football Shop</p>
+            <p className="mt-0.5 text-[10px] text-white/55">Resumen de inventario</p>
           </div>
-          <span className="ml-auto h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(217,172,73,0.8)]" title="Catálogo cargado" />
+          <span className="ml-auto h-2 w-2 rounded-full bg-[#d8b563] shadow-[0_0_12px_rgba(216,181,99,0.8)]" title="Catálogo cargado" />
         </div>
       </div>
 
       <div className="space-y-5 px-5 py-5 sm:px-6">
-        <div className="rounded-2xl border border-amber-100/[0.09] bg-gradient-to-br from-amber-300/[0.09] to-white/[0.02] p-4">
-          <p className="text-[9px] font-bold uppercase tracking-[0.17em] text-amber-100/60">Valor del inventario</p>
-          <p className="mt-2 break-words text-xl font-bold tracking-tight text-white tabular-nums">{formatPrice(stats.inventoryValue)}</p>
-          <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400">
+        <div className="rounded-2xl border border-[#d8b563]/20 bg-[#181818] p-4">
+          <p className="text-[9px] font-bold uppercase tracking-[0.17em] text-[#f5d789]">Valor del inventario</p>
+          <p className="mt-2 break-words text-xl font-semibold tracking-tight text-white tabular-nums">{formatPrice(stats.inventoryValue)}</p>
+          <div className="mt-3 flex items-center gap-2 text-[10px] text-white/55">
             <FiLayers size={13} aria-hidden="true" />
             {formatNumber(stats.units)} unidades registradas
           </div>
         </div>
 
         <div>
-          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">Detalles de tienda</p>
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Detalles de tienda</p>
           <dl>
             {details.map(([label, value]) => (
-              <div key={label} className="flex items-center justify-between gap-3 border-b border-white/[0.06] py-3 last:border-0">
-                <dt className="text-[10px] text-slate-400">{label}</dt>
-                <dd className="max-w-[52%] truncate text-right text-[11px] font-semibold text-slate-200 tabular-nums" title={value}>{value}</dd>
+              <div key={label} className="flex items-center justify-between gap-3 border-b border-white/8 py-3 last:border-0">
+                <dt className="text-[10px] text-white/55">{label}</dt>
+                <dd className="max-w-[52%] truncate text-right text-[11px] font-semibold text-white tabular-nums" title={value}>{value}</dd>
               </div>
             ))}
           </dl>
         </div>
 
-        <div className="border-t border-white/[0.08] pt-4">
+        <div className="border-t border-white/10 pt-4">
           <div className="mb-4 flex items-center gap-2">
-            <FiTrendingUp size={13} className="text-amber-300" aria-hidden="true" />
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Indicadores clave</p>
+            <FiTrendingUp size={13} className="text-[#f5d789]" aria-hidden="true" />
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">Indicadores clave</p>
           </div>
           <div className="grid grid-cols-3 gap-1">
             <RingMetric label="Activos" value={percentage(stats.active, stats.total)} caption="catálogo" color="#e2bd65" />
@@ -230,22 +214,22 @@ export default function DashboardPage() {
 
   return (
     <section className="min-h-screen space-y-5 bg-transparent px-4 py-4 sm:px-5 lg:px-7 lg:py-6">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div className="flex items-center gap-5">
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-amber-200/55">Dashboard</p>
-            <h1 className="mt-1 text-base font-bold tracking-wide text-slate-100">SUMMARY</h1>
+            <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#f5d789]">Dashboard</p>
+            <h1 className="mt-1 text-base font-semibold tracking-tight text-white">Resumen</h1>
           </div>
-          <span className="hidden h-8 w-px bg-white/[0.1] sm:block" />
+          <span className="hidden h-8 w-px bg-white/10 sm:block" />
           <div className="hidden items-center gap-2 sm:flex">
-            <span className="rounded-full bg-gradient-to-r from-amber-300 to-yellow-600 px-3 py-1.5 text-[9px] font-bold uppercase tracking-wide text-[#211b0d] shadow-[0_4px_18px_-8px_rgba(217,172,73,0.8)]">Overview</span>
-            <Link to="/products" className="rounded-full border border-white/[0.08] px-3 py-1.5 text-[9px] font-semibold text-slate-400 transition hover:border-amber-200/30 hover:text-slate-100">
+            <span className="rounded-full border border-[#d8b563]/35 bg-[#181818] px-3 py-1.5 text-[9px] font-bold uppercase tracking-wide text-[#f5d789] shadow-[0_4px_18px_-8px_rgba(216,181,99,0.8)]">Overview</span>
+            <Link to="/products" className="rounded-full border border-white/10 px-3 py-1.5 text-[9px] font-semibold text-white/60 transition duration-300 hover:border-[#d8b563]/50 hover:text-white">
               Products
             </Link>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.025] px-3 py-1.5 text-[10px] text-slate-400">
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-300 shadow-[0_0_10px_rgba(217,172,73,0.8)]" />
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-[#181818] px-3 py-1.5 text-[10px] text-white/60">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#d8b563] shadow-[0_0_10px_rgba(216,181,99,0.8)]" />
           Live catalog
         </div>
       </header>
@@ -262,13 +246,13 @@ export default function DashboardPage() {
               <MetricTile label="Agotados" value={formatNumber(stats.outOfStock)} icon={FiAlertCircle} tone="muted" to="/products" />
             </div>
 
-            <Card className="rounded-[1.4rem] border-white/[0.09] bg-[#1b1b1d]/90 p-4 sm:p-5">
+            <Card className="rounded-[1.4rem] border border-white/10 bg-[#111111] p-4 sm:p-5">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.19em] text-amber-200/55">Stock health</p>
-                  <h3 className="mt-1 text-xs font-bold text-slate-200">Estado de disponibilidad</h3>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.19em] text-[#f5d789]">Stock health</p>
+                  <h3 className="mt-1 text-xs font-semibold text-white">Estado de disponibilidad</h3>
                 </div>
-                <span className="rounded-full border border-white/[0.08] bg-white/[0.025] px-2.5 py-1 text-[9px] text-slate-400">
+                <span className="rounded-full border border-white/10 bg-[#181818] px-2.5 py-1 text-[9px] text-white/60">
                   {formatNumber(stats.units)} unidades
                 </span>
               </div>

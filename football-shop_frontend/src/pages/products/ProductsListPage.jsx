@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FiEdit2, FiEye, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
+import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/ui/button';
 import ActiveBadge from '@/components/common/ActiveBadge';
 import DataTable from '@/components/common/DataTable';
@@ -8,10 +8,9 @@ import ErrorState from '@/components/common/ErrorState';
 import { TableSkeleton } from '@/components/common/Skeletons';
 import useProducts from '@/hooks/useProducts';
 import { confirmAction, notifySuccess } from '@/utils/alerts';
-import { formatPrice, formatSubtitle, isProductActive } from '@/utils/format';
+import { formatPrice, formatSubtitle, getProductPrice, getProductStock, isProductActive } from '@/utils/format';
 
 export default function ProductsListPage() {
-  const navigate = useNavigate();
   const { products, loading, error, loadProducts, setProductActive, removeProduct } = useProducts();
 
   const handleToggle = async (product) => {
@@ -21,7 +20,7 @@ export default function ProductsListPage() {
       text: product.name,
       confirmButtonText: active ? 'Desactivar' : 'Activar'
     });
-    if (confirmed && (await setProductActive(product.slug, !active))) {
+    if (confirmed && (await setProductActive(product._id, !active))) {
       notifySuccess(active ? 'Producto desactivado' : 'Producto activado');
     }
   };
@@ -32,7 +31,7 @@ export default function ProductsListPage() {
       text: `“${product.name}” dejará de mostrarse (borrado lógico).`,
       confirmButtonText: 'Eliminar'
     });
-    if (confirmed && (await removeProduct(product.slug))) notifySuccess('Producto eliminado');
+    if (confirmed && (await removeProduct(product._id))) notifySuccess('Producto eliminado');
   };
 
   const columns = useMemo(
@@ -42,21 +41,24 @@ export default function ProductsListPage() {
         header: 'Nombre',
         render: (row) => (
           <div>
-            <Link to={`/products/${row.slug}`} className="font-semibold hover:text-primary hover:underline">
+            <span className="font-semibold">
               {row.name}
-            </Link>
+            </span>
             <p className="text-xs text-muted-foreground">{row.slug}</p>
           </div>
         )
       },
-      { key: 'category', header: 'Categoría' },
-      { key: 'subtitle', header: 'Equipo · Marca', render: (row) => formatSubtitle(row) },
-      { key: 'price', header: 'Precio', cellClassName: 'tabular-nums', render: (row) => formatPrice(row.price) },
+      { key: 'category', header: 'Categoría', render: (row) => row.category_id?.name || '—' },
+      { key: 'subtitle', header: 'Categoría · Marca', render: (row) => formatSubtitle(row) },
+      { key: 'price', header: 'Precio desde', cellClassName: 'tabular-nums', render: (row) => formatPrice(getProductPrice(row)) },
       {
         key: 'stock',
         header: 'Stock',
         cellClassName: 'tabular-nums',
-        render: (row) => (row.stock > 0 ? row.stock : <span className="font-semibold text-destructive">Agotado</span>)
+        render: (row) => {
+          const stock = getProductStock(row);
+          return stock > 0 ? stock : <span className="font-semibold text-destructive">Agotado</span>;
+        }
       },
       { key: 'isActive', header: 'Activo', render: (row) => <ActiveBadge active={isProductActive(row)} /> },
       {
@@ -64,11 +66,10 @@ export default function ProductsListPage() {
         header: 'Acciones',
         render: (row) => (
           <div className="flex items-center gap-2">
-            <Button size="icon" variant="outline" aria-label={`Ver ${row.name}`} title="Ver" onClick={() => navigate(`/products/${row.slug}`)}>
-              <FiEye size={14} aria-hidden="true" />
-            </Button>
-            <Button size="icon" variant="outline" aria-label={`Editar ${row.name}`} title="Editar" onClick={() => navigate(`/products/${row.slug}/edit`)}>
-              <FiEdit2 size={14} aria-hidden="true" />
+            <Button asChild size="icon" variant="outline" aria-label={`Editar ${row.name}`} title="Editar">
+              <Link to={`/products/${row._id}/edit`}>
+                <FiEdit2 size={14} aria-hidden="true" />
+              </Link>
             </Button>
             <Button size="sm" variant="secondary" onClick={() => handleToggle(row)}>
               {isProductActive(row) ? 'Desactivar' : 'Activar'}
@@ -81,7 +82,7 @@ export default function ProductsListPage() {
       }
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [navigate, setProductActive, removeProduct]
+    [setProductActive, removeProduct]
   );
 
   let content;

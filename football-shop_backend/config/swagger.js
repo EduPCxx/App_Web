@@ -84,6 +84,26 @@ const options = {
         }
       },
       '/api/products/{id}': resourceByIdPath('Productos'),
+      '/api/products/{id}/soft-delete': {
+        patch: {
+          tags: ['Productos'],
+          summary: 'Borrado lógico de producto por ID',
+          parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Producto borrado' }, 404: { description: 'No encontrado' } }
+        }
+      },
+      '/api/products/{id}/is-active': {
+        patch: {
+          tags: ['Productos'],
+          summary: 'Cambiar visibilidad del producto por ID',
+          parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string' } }],
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { type: 'object', required: ['isActive'], properties: { isActive: { type: 'boolean' } } } } }
+          },
+          responses: { 200: { description: 'Visibilidad actualizada' }, 404: { description: 'No encontrado' } }
+        }
+      },
       '/api/products/slug/{slug}': {
         get: {
           tags: ['Productos'],

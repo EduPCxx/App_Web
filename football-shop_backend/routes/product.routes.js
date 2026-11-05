@@ -7,6 +7,8 @@ const {
   getProductSchema,
   updateProductSchema,
   deleteProductSchema,
+  softDeleteProductSchema,
+  setProductActiveSchema,
   getProductBySlugSchema,
   updateProductBySlugSchema,
   softDeleteProductBySlugSchema,
@@ -39,5 +41,8 @@ router
   .get(validate(getProductSchema), controller.getById)
   .put(validate(updateProductSchema), controller.update)
   .delete(validate(deleteProductSchema), controller.remove);
+
+router.patch('/:id/soft-delete', validate(softDeleteProductSchema), controller.softDelete);
+router.patch('/:id/is-active', validate(setProductActiveSchema), controller.setActive);
 
 module.exports = router;

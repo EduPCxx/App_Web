@@ -80,11 +80,29 @@ const softDeleteBySlug = async (slug) => {
   }
 };
 
+const softDeleteById = async (id) => {
+  try {
+    const product = await Product.findOneAndUpdate(scoped({ _id: id }), { deletedAt: new Date() }, { new: true });
+    return product ? findByIdIncludingDeleted(product._id) : null;
+  } catch (error) {
+    throw wrapDbError(error, 'eliminar lógicamente el producto');
+  }
+};
+
 const findByIdIncludingDeleted = async (id) => normalizeDecimals(await populateProduct(Product.findById(id)).lean());
 
 const setActiveBySlug = async (slug, isActive) => {
   try {
     const product = await Product.findOneAndUpdate(scoped({ slug }), { isActive }, { new: true });
+    return product ? findById(product._id) : null;
+  } catch (error) {
+    throw wrapDbError(error, 'cambiar la visibilidad del producto');
+  }
+};
+
+const setActiveById = async (id, isActive) => {
+  try {
+    const product = await Product.findOneAndUpdate(scoped({ _id: id }), { isActive }, { new: true });
     return product ? findById(product._id) : null;
   } catch (error) {
     throw wrapDbError(error, 'cambiar la visibilidad del producto');
@@ -162,7 +180,9 @@ module.exports = {
   create,
   updateById,
   softDeleteBySlug,
+  softDeleteById,
   setActiveBySlug,
+  setActiveById,
   getStatsRaw,
   deleteById,
   slugExists

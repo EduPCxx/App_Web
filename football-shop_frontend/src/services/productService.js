@@ -3,25 +3,22 @@ import { productRepository } from '@/repositories/productRepository';
 // Máximo que permite la API por petición
 const MAX_ITEMS = 100;
 
-// Convierte el formulario (strings + checkbox) al payload que espera la API.
+// Convierte los valores de formulario al modelo relacional del backend.
 const normalize = (form) => ({
   name: form.name.trim(),
-  category: form.category,
-  team: form.team.trim(),
-  price: Number(form.price),
-  stock: Number(form.stock),
-  brand: form.brand.trim(),
-  size: form.size.trim(),
+  category_id: form.category_id,
+  brand_id: form.brand_id,
   description: form.description.trim(),
+  status: form.status,
   isActive: Boolean(form.isActive)
 });
 
 // Lógica de negocio del cliente. Los errores se propagan como ApiError (ver apiService).
 export const productService = {
   list: async () => (await productRepository.list({ limit: MAX_ITEMS })).data,
-  getBySlug: async (slug) => (await productRepository.getBySlug(slug)).data,
+  getById: async (id) => (await productRepository.getById(id)).data,
   create: async (form) => (await productRepository.create(normalize(form))).data,
-  update: async (slug, form) => (await productRepository.updateBySlug(slug, normalize(form))).data,
-  setActive: async (slug, isActive) => (await productRepository.setActiveBySlug(slug, isActive)).data,
-  remove: async (slug) => (await productRepository.softDeleteBySlug(slug)).data
+  update: async (id, form) => (await productRepository.updateById(id, normalize(form))).data,
+  setActive: async (id, isActive) => (await productRepository.setActiveById(id, isActive)).data,
+  remove: async (id) => (await productRepository.softDeleteById(id)).data
 };

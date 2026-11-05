@@ -33,24 +33,6 @@ export function StatsSkeleton({ count = 6 }) {
   );
 }
 
-export function DetailSkeleton() {
-  return (
-    <div className="space-y-4" aria-busy="true" aria-label="Cargando producto">
-      <Skeleton className="h-5 w-32" />
-      <Card className="space-y-4 p-6">
-        <Skeleton className="h-6 w-40" />
-        <Skeleton className="h-9 w-2/3" />
-        <Skeleton className="h-20 w-full" />
-        <div className="grid gap-3 sm:grid-cols-2">
-          {Array.from({ length: 6 }, (_, i) => (
-            <Skeleton key={i} className="h-14 w-full" />
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-}
-
 export function FormSkeleton() {
   return (
     <Card className="space-y-6 p-6" aria-busy="true" aria-label="Cargando formulario">

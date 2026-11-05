@@ -5,15 +5,15 @@ import { notifyError } from '@/utils/alerts';
 
 const LOADING = { product: null, loading: true, error: null, notFound: false };
 
-// Producto por slug. Reutiliza el catálogo global si ya lo contiene; si no (enlace directo, más de
+// Producto por ID. Reutiliza el catálogo global si ya lo contiene; si no (enlace directo, más de
 // 100 productos...) lo pide a la API. Un 404 no es un error de red: se expone como `notFound`.
-export default function useProduct(slug) {
+export default function useProduct(id) {
   const { products } = useAppContext();
-  const cached = products.find((p) => p.slug === slug) ?? null;
+  const cached = products.find((p) => p._id === id) ?? null;
   const cachedRef = useRef(cached);
   cachedRef.current = cached;
 
-  const [remote, setRemote] = useState({ ...LOADING, slug: null });
+  const [remote, setRemote] = useState({ ...LOADING, id: null });
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
@@ -21,16 +21,16 @@ export default function useProduct(slug) {
     if (cachedRef.current) return undefined;
 
     let ignore = false;
-    setRemote({ ...LOADING, slug });
+    setRemote({ ...LOADING, id });
 
     (async () => {
       try {
-        const product = await productService.getBySlug(slug);
-        if (!ignore) setRemote({ slug, product, loading: false, error: null, notFound: false });
+        const product = await productService.getById(id);
+        if (!ignore) setRemote({ id, product, loading: false, error: null, notFound: false });
       } catch (err) {
         if (ignore) return;
         const notFound = err.status === 404;
-        setRemote({ slug, product: null, loading: false, error: notFound ? null : err.message, notFound });
+        setRemote({ id, product: null, loading: false, error: notFound ? null : err.message, notFound });
         if (!notFound) await notifyError(err, 'No se pudo cargar el producto');
       }
     })();
@@ -38,9 +38,9 @@ export default function useProduct(slug) {
     return () => {
       ignore = true;
     };
-  }, [slug, attempt]);
+  }, [id, attempt]);
 
   if (cached) return { product: cached, loading: false, error: null, notFound: false, retry };
-  if (remote.slug !== slug) return { ...LOADING, retry };
+  if (remote.id !== id) return { ...LOADING, retry };
   return { ...remote, retry };
 }

@@ -45,6 +45,25 @@ const remove = async (req, res, next) => {
   }
 };
 
+const softDelete = async (req, res, next) => {
+  try {
+    const product = await productService.softDeleteProduct(req.params.id);
+    res.status(200).json({ success: true, message: 'Producto eliminado correctamente', data: product });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const setActive = async (req, res, next) => {
+  try {
+    const product = await productService.setProductActive(req.params.id, req.body.isActive);
+    const message = product.isActive ? 'Producto activado correctamente' : 'Producto desactivado correctamente';
+    res.status(200).json({ success: true, message, data: product });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getBySlug = async (req, res, next) => {
   try {
     const product = await productService.getProductBySlug(req.params.slug);
@@ -82,4 +101,4 @@ const setActiveBySlug = async (req, res, next) => {
   }
 };
 
-module.exports = { create, list, getById, update, remove, getBySlug, updateBySlug, softDeleteBySlug, setActiveBySlug };
+module.exports = { create, list, getById, update, remove, softDelete, setActive, getBySlug, updateBySlug, softDeleteBySlug, setActiveBySlug };

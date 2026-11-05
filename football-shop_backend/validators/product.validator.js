@@ -43,6 +43,11 @@ const listProductsSchema = z.object({
 const getProductSchema = z.object({ params: idParams });
 const updateProductSchema = z.object({ params: idParams, body: updateBody });
 const deleteProductSchema = z.object({ params: idParams });
+const softDeleteProductSchema = z.object({ params: idParams });
+const setProductActiveSchema = z.object({
+  params: idParams,
+  body: z.object({ isActive: z.boolean({ required_error: 'El campo "isActive" es obligatorio' }) })
+});
 const getProductBySlugSchema = z.object({ params: slugParams });
 const updateProductBySlugSchema = z.object({ params: slugParams, body: updateBody });
 const softDeleteProductBySlugSchema = z.object({ params: slugParams });
@@ -57,6 +62,8 @@ module.exports = {
   getProductSchema,
   updateProductSchema,
   deleteProductSchema,
+  softDeleteProductSchema,
+  setProductActiveSchema,
   getProductBySlugSchema,
   updateProductBySlugSchema,
   softDeleteProductBySlugSchema,

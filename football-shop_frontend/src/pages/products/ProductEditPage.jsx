@@ -10,17 +10,16 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import { notifySuccess } from '@/utils/alerts';
 
 export default function ProductEditPage() {
-  const { slug } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { product, loading, error, notFound, retry } = useProduct(slug);
+  const { product, loading, error, notFound, retry } = useProduct(id);
   const { updateProduct } = useProducts();
 
   const handleSubmit = async (values) => {
-    const updated = await updateProduct(slug, values);
+    const updated = await updateProduct(id, values);
     if (!updated) return; // el error ya se ha mostrado con SweetAlert2
     notifySuccess('Producto actualizado');
-    // Si cambia el nombre, el backend genera un slug nuevo
-    navigate(`/products/${updated.slug}`);
+    navigate('/products');
   };
 
   if (loading) return <FormSkeleton />;
@@ -35,7 +34,7 @@ export default function ProductEditPage() {
         initialValues={toFormValues(product)}
         onSubmit={handleSubmit}
         submitLabel="Guardar cambios"
-        cancelTo={`/products/${product.slug}`}
+        cancelTo="/products"
       />
     </section>
   );

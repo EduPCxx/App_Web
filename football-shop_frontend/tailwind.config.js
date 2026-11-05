@@ -9,14 +9,15 @@ export default {
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        gold: 'hsl(var(--gold))',
         primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
         muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
         destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
         card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' }
       },
       boxShadow: {
-        soft: '0 18px 48px -30px rgba(0, 0, 0, 0.58)',
-        glow: '0 0 28px -14px hsl(0 0% 100% / 0.42)'
+        soft: '0 18px 48px -30px rgba(0, 0, 0, 0.72)',
+        glow: '0 0 28px -14px hsl(42 94% 58% / 0.32)'
       },
       borderRadius: {
         xl: '1.125rem',
@@ -24,7 +25,8 @@ export default {
         '3xl': '1.875rem'
       },
       fontFamily: {
-        sans: ['Space Grotesk', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif']
+        sans: ['Geist', 'Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
       }
     }
   },

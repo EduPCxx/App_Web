@@ -27,7 +27,9 @@ const fakeRepo = {
   },
   updateById: async (id, data) => { const d = db.find((x) => x._id === id && live(x)); return d ? Object.assign(d, data) : null; },
   softDeleteBySlug: async (slug) => { const d = db.find((x) => x.slug === slug && live(x)); return d ? Object.assign(d, { deletedAt: new Date() }) : null; },
+  softDeleteById: async (id) => { const d = db.find((x) => x._id === id && live(x)); return d ? Object.assign(d, { deletedAt: new Date() }) : null; },
   setActiveBySlug: async (slug, isActive) => { const d = db.find((x) => x.slug === slug && live(x)); return d ? Object.assign(d, { isActive }) : null; },
+  setActiveById: async (id, isActive) => { const d = db.find((x) => x._id === id && live(x)); return d ? Object.assign(d, { isActive }) : null; },
   getStatsRaw: async () => statsRaw,
   deleteById: async () => null,
   slugExists: async (slug, ex) => db.some((d) => d.slug === slug && d._id !== ex)
@@ -89,6 +91,13 @@ const tests = {
     await fails(() => svc.softDeleteProductBySlug(p.slug), 404);
     const { items } = await svc.listProducts({ page: 1, limit: 10 });
     assert.ok(!items.some((i) => i.slug === p.slug));
+  },
+  async accionesPorId() {
+    const p = await svc.createProduct({ ...base, name: 'Acciones por ID' });
+    assert.strictEqual((await svc.setProductActive(p._id, false)).isActive, false);
+    const deleted = await svc.softDeleteProduct(p._id);
+    assert.ok(deleted.deletedAt);
+    await fails(() => svc.getProductById(p._id), 404);
   },
   async activarYDesactivar() {
     const p = await svc.createProduct({ ...base, name: 'Toggle' });

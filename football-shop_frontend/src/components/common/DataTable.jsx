@@ -18,7 +18,7 @@ export default function DataTable({ columns, data, rowKey = '_id', emptyMessage 
           <thead className="bg-muted/70">
             <tr>
               {columns.map((column) => (
-                <th key={column.key} scope="col" className={cn('px-4 py-3 text-left font-semibold', column.headerClassName)}>
+                <th key={column.key} scope="col" className={cn('px-4 py-3 text-left font-semibold text-gold', column.headerClassName)}>
                   {column.header}
                 </th>
               ))}
