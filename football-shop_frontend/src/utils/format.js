@@ -15,5 +15,8 @@ export const getProductPrice = (product) => {
   return Number(variant?.price || 0);
 };
 
+export const getProductSku = (product) =>
+  (product.variants || []).find((item) => item.is_default)?.sku || product.variants?.[0]?.sku || '—';
+
 // Un producto sin el campo (datos anteriores a la migración) se considera activo
 export const isProductActive = (product) => product.isActive !== false;

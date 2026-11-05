@@ -1,10 +1,11 @@
 const { z } = require('zod');
 const { SLUG_REGEX } = require('../utils/slugify');
+const { STATUSES } = require('../utils/lifecycle');
 
 const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'El ID debe ser un ObjectId válido');
 const requiredText = (field) =>
   z.string({ required_error: `El campo "${field}" es obligatorio` }).trim().min(1, `El campo "${field}" es obligatorio`);
-const status = z.enum(['draft', 'active', 'archived']);
+const status = z.enum(STATUSES);
 const productFields = {
   name: requiredText('name').min(2).max(150),
   category_id: objectId,
@@ -48,6 +49,8 @@ const setProductActiveSchema = z.object({
   params: idParams,
   body: z.object({ isActive: z.boolean({ required_error: 'El campo "isActive" es obligatorio' }) })
 });
+const setProductStatusSchema = z.object({ params: idParams, body: z.object({ status }) });
+const restoreProductSchema = z.object({ params: idParams });
 const getProductBySlugSchema = z.object({ params: slugParams });
 const updateProductBySlugSchema = z.object({ params: slugParams, body: updateBody });
 const softDeleteProductBySlugSchema = z.object({ params: slugParams });
@@ -64,6 +67,8 @@ module.exports = {
   deleteProductSchema,
   softDeleteProductSchema,
   setProductActiveSchema,
+  setProductStatusSchema,
+  restoreProductSchema,
   getProductBySlugSchema,
   updateProductBySlugSchema,
   softDeleteProductBySlugSchema,

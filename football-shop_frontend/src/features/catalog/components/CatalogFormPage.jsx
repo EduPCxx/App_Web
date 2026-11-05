@@ -15,6 +15,7 @@ import { catalogEntities } from '@/features/catalog/catalogEntities';
 import { catalogServicesByType } from '@/features/catalog/catalogServices';
 import { productService } from '@/services/productService';
 import { notifyError, notifySuccess } from '@/utils/alerts';
+import { normalizeStatus } from '@/utils/status';
 
 const relations = {
   products: productService,
@@ -31,6 +32,7 @@ const entityTypeResource = { product: 'products', variant: 'variants', brand: 'b
 
 function fieldValue(field, value) {
   if (field.type === 'checkbox') return Boolean(value);
+  if (field.name === 'status') return normalizeStatus(value);
   if (field.name === 'attributes' && value && typeof value === 'object') return JSON.stringify(value, null, 2);
   if (field.type === 'relation' && value && typeof value === 'object') return value._id;
   return value ?? '';
@@ -52,8 +54,11 @@ function FieldControl({ field, register, errors, relationItems }) {
       <Select {...commonProps} {...register(field.name)}>
         <option value="">Selecciona…</option>
         {(field.options || relationItems).map((option) => (
-          <option key={typeof option === 'string' ? option : option._id} value={typeof option === 'string' ? option : option._id}>
-            {typeof option === 'string' ? option : option.name || option.title || option.slug || option.sku || option._id}
+          <option
+            key={typeof option === 'string' ? option : option.value || option._id}
+            value={typeof option === 'string' ? option : option.value || option._id}
+          >
+            {typeof option === 'string' ? option : option.label || option.name || option.title || option.slug || option.sku || option._id}
           </option>
         ))}
       </Select>
@@ -94,7 +99,7 @@ export default function CatalogFormPage({ type, useResource }) {
     reset,
     watch,
     formState: { errors, isSubmitting }
-  } = useForm({ resolver: zodResolver(entity.schema), defaultValues: defaults });
+  } = useForm({ resolver: zodResolver(editing ? entity.updateSchema || entity.schema : entity.schema), defaultValues: defaults });
   const selectedEntityType = watch('entity_type');
 
   useEffect(() => {
@@ -175,7 +180,11 @@ export default function CatalogFormPage({ type, useResource }) {
             return (
               <FieldControl
                 key={field.name}
-                field={field}
+                field={
+                  type === 'users' && field.name === 'password' && editing
+                    ? { ...field, label: 'Nueva contraseña (opcional)' }
+                    : field
+                }
                 register={register}
                 errors={errors}
                 relationItems={relationOptions[resource] || []}

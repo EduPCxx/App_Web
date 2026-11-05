@@ -11,6 +11,8 @@ const categoryRoutes = require('./routes/category.routes');
 const brandRoutes = require('./routes/brand.routes');
 const variantRoutes = require('./routes/variant.routes');
 const imageRoutes = require('./routes/image.routes');
+const roleRoutes = require('./routes/role.routes');
+const userRoutes = require('./routes/user.routes');
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
@@ -41,7 +43,7 @@ app.get('/', (req, res) => {
     success: true,
     message: 'API de Productos de Fútbol',
     docs: '/api-docs',
-    endpoints: ['/api/categories', '/api/brands', '/api/products', '/api/variants', '/api/images']
+    endpoints: ['/api/categories', '/api/brands', '/api/products', '/api/variants', '/api/images', '/api/roles', '/api/users']
   });
 });
 
@@ -55,7 +57,8 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/brands', brandRoutes);
 app.use('/api/variants', variantRoutes);
 app.use('/api/images', imageRoutes);
-// User and role routes remain unmounted until authentication and authorization are available.
+app.use('/api/roles', roleRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 app.use(notFoundHandler);

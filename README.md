@@ -8,8 +8,8 @@ Este repositorio contiene la solución fullstack para la gestión de un catálog
 
 ```text
 football-shop/
-├── backend/          # API REST (Node.js, Express, MongoDB)
-└── frontend/         # Admin Dashboard (React, Vite, Tailwind CSS, shadcn/ui)
+├── football-shop_backend/  # API REST (Node.js, Express, MongoDB)
+└── football-shop_frontend/ # Admin Dashboard (React, Vite, Tailwind CSS, shadcn/ui)
 ```
 
 ---
@@ -51,7 +51,7 @@ cd <NOMBRE_DEL_PROYECTO>
 
 1. **Navegar a la carpeta del backend e instalar dependencias:**
    ```bash
-   cd backend
+   cd football-shop_backend
    npm install
    ```
 
@@ -72,7 +72,9 @@ cd <NOMBRE_DEL_PROYECTO>
 3. **Ejecutar migraciones y datos de prueba (Seed):**
    ```bash
    npm run migrate:slug # Inicializa/rellena los campos slug, deletedAt e isActive
-   npm run seed         # (Opcional) Carga 15 productos de ejemplo
+   npm run migrate:catalog # Convierte el catálogo existente a referencias y variantes
+   npm run migrate:lifecycle # Normaliza estados y campos de ciclo de vida
+   npm run seed         # (Opcional) Carga 14 productos, variantes, imágenes, roles y un usuario de ejemplo
    ```
 
 4. **Iniciar el backend:**
@@ -86,18 +88,20 @@ cd <NOMBRE_DEL_PROYECTO>
    * **Swagger UI:** `http://localhost:3000/api-docs`
    * **Health Check:** `http://localhost:3000/health`
 
+   Roles y Usuarios están disponibles en las tablas habituales. Las imágenes del formulario de producto se gestionan pegando sus URLs públicas.
+
 ---
 
 ### 🔵 Frontend (Admin Dashboard)
 
 1. **Navegar a la carpeta del frontend e instalar dependencias:**
    ```bash
-   cd ../frontend
+   cd ../football-shop_frontend
    npm install
    ```
 
 2. **Configurar variables de entorno:**  
-   Crea o verifica el archivo `.env` en la raíz de la carpeta `frontend`:
+   Crea o verifica el archivo `.env` en la raíz de `football-shop_frontend`:
    ```env
    VITE_API_URL=http://localhost:3000/api
    ```
@@ -124,26 +128,25 @@ Flujo del Backend: `route → validate (Zod) → controller → service → repo
 | `POST` | `/api/products` | Crear un nuevo producto |
 | `GET` | `/api/products/:id` | Obtener producto por ID |
 | `PUT` | `/api/products/:id` | Actualizar producto por ID |
-| `DELETE` | `/api/products/:id` | Eliminar producto de forma física |
+| `DELETE` | `/api/products/:id` | Eliminar producto si no tiene dependencias |
+| `PATCH` | `/api/products/:id/soft-delete` | Borrado lógico del producto |
+| `PATCH` | `/api/products/:id/restore` | Restaurar producto eliminado |
+| `PATCH` | `/api/products/:id/status` | Avanzar estado según las transiciones permitidas |
 | `GET` | `/api/products/slug/:slug` | Obtener producto por slug |
 | `PUT` | `/api/products/slug/:slug` | Actualizar por slug (recalcula slug si cambia `name`) |
 | `PATCH` | `/api/products/slug/:slug/is-active` | Activar / Desactivar producto (`{ "isActive": boolean }`) |
 | `PATCH` | `/api/products/slug/:slug/soft-delete` | Borrado lógico del producto |
 
 ### **Parámetros de Búsqueda y Filtro (`GET /api/products`)**
-`category`, `team`, `brand`, `search`, `minPrice`, `maxPrice`, `sortBy` (`name|price|stock|createdAt`), `order` (`asc|desc`), `page`, `limit` (máx. 100).
+`category_id`, `brand_id`, `status`, `isActive`, `search`, `sortBy` (`name|status|createdAt`), `order` (`asc|desc`), `page`, `limit` (máx. 100).
 
-*Ejemplo:* `GET /api/products?category=Botas&brand=Nike&minPrice=100&sortBy=price&order=asc`
+*Ejemplo:* `GET /api/products?category_id=<id>&brand_id=<id>&page=1&limit=20`
 
 ### **Estructura del Modelo de Producto**
 * `name` (String, 2–150 caracteres, obligatorio)
-* `category` (String: `Camisetas`, `Botas`, `Balones`, `Equipamiento`, `Accesorios`)
-* `team` (String, obligatorio — `N/A` si no aplica)
-* `price` (Number, $\ge 0$, obligatorio)
-* `stock` (Integer, $\ge 0$, obligatorio)
-* `brand` (String, obligatorio)
-* `size` (String, obligatorio)
-* `description` (String, máx. 1000 caracteres, obligatorio)
+* `category_id`, `brand_id` (referencias a categorías y marcas)
+* `name`, `slug`, `description`, `status`, `isActive`, `deletedAt`
+* `price`, `stock` y `sku` pertenecen a `variants`; el listado deriva esos valores de la variante predeterminada o del conjunto de variantes.
 
 ---
 
@@ -155,9 +158,9 @@ Flujo del Backend: `route → validate (Zod) → controller → service → repo
 | **Listado de Productos** | `/products` | `GET /api/products?limit=100` |
 | **Detalle de Producto** | `/products/:slug` | `GET /api/products/slug/:slug` |
 | **Nuevo Producto** | `/products/new` | `POST /api/products` |
-| **Editar Producto** | `/products/:slug/edit` | `PUT /api/products/slug/:slug` |
-| **Estado (Activar/Desactivar)** | Tabla / Detalle | `PATCH /api/products/slug/:slug/is-active` |
-| **Eliminado Lógico** | Tabla / Detalle | `PATCH /api/products/slug/:slug/soft-delete` |
+| **Editar Producto** | `/products/:id/edit` | `PUT /api/products/:id` |
+| **Estado (Activar/Desactivar)** | Tabla / Detalle | `PATCH /api/products/:id/is-active` |
+| **Eliminado Lógico** | Tabla / Detalle | `PATCH /api/products/:id/soft-delete` |
 
 ---
 
@@ -171,4 +174,4 @@ Flujo del Backend: `route → validate (Zod) → controller → service → repo
 
 ## 📄 Recursos Adicionales
 
-* Consulta el archivo [`Postman.md`](./backend/Postman.md) en la carpeta backend para ver ejemplos completos de requests y responses.
+* Consulta el archivo [`Postman.md`](./football-shop_backend/Postman.md) en la carpeta backend para ver ejemplos completos de requests y responses.

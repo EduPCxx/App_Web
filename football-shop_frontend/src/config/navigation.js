@@ -1,4 +1,4 @@
-import { FiHome, FiPackage, FiTag, FiLayers, FiImage, FiShield, FiUsers } from 'react-icons/fi';
+import { FiHome, FiPackage, FiTag, FiLayers, FiShield, FiUsers } from 'react-icons/fi';
 
 // Para añadir una sección al panel basta con añadir un elemento aquí y su ruta en AppRoutes
 export const NAV_ITEMS = [
@@ -12,8 +12,7 @@ export const NAV_ITEMS = [
       { to: '/products', label: 'Productos', icon: FiPackage, end: false },
       { to: '/categories', label: 'Categorías', icon: FiLayers, end: false },
       { to: '/brands', label: 'Marcas', icon: FiTag, end: false },
-      { to: '/variants', label: 'Variantes', icon: FiPackage, end: false },
-      { to: '/images', label: 'Imágenes', icon: FiImage, end: false }
+      { to: '/variants', label: 'Variantes', icon: FiPackage, end: false }
     ]
   },
   {

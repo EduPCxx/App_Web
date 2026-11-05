@@ -7,7 +7,8 @@ import { toFormValues } from '@/features/products/productSchema';
 import useProduct from '@/hooks/useProduct';
 import useProducts from '@/hooks/useProducts';
 import NotFoundPage from '@/pages/NotFoundPage';
-import { notifySuccess } from '@/utils/alerts';
+import { notifyError, notifySuccess } from '@/utils/alerts';
+import { syncProductImages } from '@/features/products/productImages';
 
 export default function ProductEditPage() {
   const { id } = useParams();
@@ -15,9 +16,15 @@ export default function ProductEditPage() {
   const { product, loading, error, notFound, retry } = useProduct(id);
   const { updateProduct } = useProducts();
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values, images) => {
     const updated = await updateProduct(id, values);
     if (!updated) return; // el error ya se ha mostrado con SweetAlert2
+    try {
+      await syncProductImages(id, product.images || [], images);
+    } catch (imageError) {
+      await notifyError(imageError, 'El producto se guardó, pero no se pudieron actualizar sus imágenes');
+      return;
+    }
     notifySuccess('Producto actualizado');
     navigate('/products');
   };

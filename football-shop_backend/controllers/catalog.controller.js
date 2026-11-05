@@ -9,10 +9,10 @@ const controllerFor = (type) => ({
       next(error);
     }
   },
-  list: async (_req, res, next) => {
+  list: async (req, res, next) => {
     try {
-      const data = await catalogService.list(type);
-      res.status(200).json({ success: true, data });
+      const { items, pagination } = await catalogService.list(type, req.query);
+      res.status(200).json({ success: true, data: items, pagination });
     } catch (error) {
       next(error);
     }
@@ -20,6 +20,14 @@ const controllerFor = (type) => ({
   get: async (req, res, next) => {
     try {
       const data = await catalogService.getById(type, req.params.id);
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  },
+  getBySlug: async (req, res, next) => {
+    try {
+      const data = await catalogService.getBySlug(type, req.params.slug);
       res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
@@ -37,6 +45,38 @@ const controllerFor = (type) => ({
     try {
       const data = await catalogService.remove(type, req.params.id);
       res.status(200).json({ success: true, message: `${type} eliminado correctamente`, data });
+    } catch (error) {
+      next(error);
+    }
+  },
+  softDelete: async (req, res, next) => {
+    try {
+      const data = await catalogService.softDelete(type, req.params.id);
+      res.status(200).json({ success: true, message: `${type} eliminado correctamente`, data });
+    } catch (error) {
+      next(error);
+    }
+  },
+  restore: async (req, res, next) => {
+    try {
+      const data = await catalogService.restore(type, req.params.id);
+      res.status(200).json({ success: true, message: `${type} restaurado correctamente`, data });
+    } catch (error) {
+      next(error);
+    }
+  },
+  setActive: async (req, res, next) => {
+    try {
+      const data = await catalogService.setActive(type, req.params.id, req.body.isActive);
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  },
+  setStatus: async (req, res, next) => {
+    try {
+      const data = await catalogService.setStatus(type, req.params.id, req.body.status);
+      res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
     }

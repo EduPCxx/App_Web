@@ -15,9 +15,9 @@ const schema = new mongoose.Schema(
     compare_at_price: { type: mongoose.Schema.Types.Decimal128, min: 0, default: null },
     attributes: { type: mongoose.Schema.Types.Mixed, default: {} },
     is_default: { type: Boolean, default: false },
-    status: { type: String, enum: ['draft', 'active', 'archived'], default: 'active' },
+    status: { type: String, enum: require('../utils/lifecycle').STATUSES, default: 'pending', index: true },
     isActive: { type: Boolean, default: true, index: true },
-    deletedAt: { type: Date, default: null }
+    deletedAt: { type: Date, default: null, index: true }
   },
   { timestamps: true, versionKey: false }
 );

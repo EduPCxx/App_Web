@@ -64,6 +64,24 @@ const setActive = async (req, res, next) => {
   }
 };
 
+const restore = async (req, res, next) => {
+  try {
+    const product = await productService.restoreProduct(req.params.id);
+    res.status(200).json({ success: true, message: 'Producto restaurado correctamente', data: product });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const setStatus = async (req, res, next) => {
+  try {
+    const product = await productService.setProductStatus(req.params.id, req.body.status);
+    res.status(200).json({ success: true, data: product });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getBySlug = async (req, res, next) => {
   try {
     const product = await productService.getProductBySlug(req.params.slug);
@@ -101,4 +119,18 @@ const setActiveBySlug = async (req, res, next) => {
   }
 };
 
-module.exports = { create, list, getById, update, remove, softDelete, setActive, getBySlug, updateBySlug, softDeleteBySlug, setActiveBySlug };
+module.exports = {
+  create,
+  list,
+  getById,
+  update,
+  remove,
+  softDelete,
+  restore,
+  setActive,
+  setStatus,
+  getBySlug,
+  updateBySlug,
+  softDeleteBySlug,
+  setActiveBySlug
+};

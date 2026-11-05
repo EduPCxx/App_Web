@@ -1,8 +1,10 @@
 const { z } = require('zod');
+const { STATUSES } = require('../utils/lifecycle');
+const { SLUG_REGEX } = require('../utils/slugify');
 
 const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'El ID debe ser un ObjectId válido');
 const text = (max = 200) => z.string().trim().min(1).max(max);
-const status = z.enum(['draft', 'active', 'archived']);
+const status = z.enum(STATUSES);
 const categoryFields = {
   name: text(100),
   description: z.string().trim().max(500).optional(),
@@ -58,6 +60,21 @@ const makeBodySchemas = (fields, updateFields = fields) => ({
     message: 'Debes enviar al menos un campo para actualizar'
   })
 });
+const statusAction = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({ status })
+});
+const activeAction = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({ isActive: z.boolean() })
+});
+const idAction = z.object({ params: z.object({ id: objectId }) });
+const slugAction = z.object({
+  params: z.object({
+    slug: z.string().max(160).regex(SLUG_REGEX, 'El slug solo puede contener letras minúsculas, números y guiones')
+  })
+});
+const sluggedTypes = new Set(['categories', 'brands']);
 
 const schemas = Object.fromEntries(
   Object.entries({
@@ -75,8 +92,18 @@ const schemas = Object.fromEntries(
         create: z.object({ body: body.create }),
         update: z.object({ params: z.object({ id: objectId }), body: body.update }),
         get: z.object({ params: z.object({ id: objectId }) }),
-        list: z.object({ query: z.object({}) }),
-        remove: z.object({ params: z.object({ id: objectId }) })
+        ...(sluggedTypes.has(type) ? { getBySlug: slugAction } : {}),
+        list: z.object({
+          query: z.object({
+            page: z.coerce.number().int().min(1).default(1),
+            limit: z.coerce.number().int().min(1).max(100).default(10)
+          })
+        }),
+        remove: idAction,
+        softDelete: idAction,
+        restore: idAction,
+        setActive: activeAction,
+        setStatus: statusAction
       }
     ];
   })

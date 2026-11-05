@@ -33,7 +33,7 @@ const migrate = async () => {
           name: categoryName,
           slug: categorySlug,
           description: '',
-          status: 'active',
+          status: 'pending',
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date()
@@ -47,7 +47,7 @@ const migrate = async () => {
         $setOnInsert: {
           name: brandName,
           slug: brandSlug,
-          status: 'active',
+          status: 'pending',
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date()
@@ -58,14 +58,12 @@ const migrate = async () => {
     const category = await categories.findOne({ slug: categorySlug });
     const brand = await brands.findOne({ slug: brandSlug });
     const sku = `LEGACY-${product._id.toString()}`.toUpperCase();
-    const migratedStatus =
-      product.status === 'published'
-        ? 'active'
-        : product.status === 'suspended'
-          ? 'archived'
-          : ['draft', 'active', 'archived'].includes(product.status)
-            ? product.status
-            : 'active';
+    const migratedStatus = {
+      draft: 'pending',
+      active: 'published',
+      archived: 'finished',
+      suspended: 'cancelled'
+    }[product.status] || (['pending', 'processing', 'published', 'finished', 'cancelled'].includes(product.status) ? product.status : 'pending');
 
     await variants.updateOne(
       { sku },

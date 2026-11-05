@@ -39,6 +39,36 @@ const resourceByIdPath = (resource) => ({
     responses: { 200: { description: 'Recurso eliminado' }, 409: { description: 'Tiene recursos relacionados' } }
   }
 });
+const lifecyclePaths = (resourcePath, resourceTag) => {
+  const operation = (summary, body) => ({
+    tags: [resourceTag],
+    summary,
+    parameters: [{ in: 'path', name: 'id', required: true, schema: id }],
+    ...(body ? { requestBody: { required: true, content: { 'application/json': { schema: body } } } } : {}),
+    responses: {
+      200: { description: 'Operación completada' },
+      404: { description: 'No encontrado' },
+      409: { description: 'Conflicto de estado' },
+      422: { description: 'Transición de estado no permitida' }
+    }
+  });
+  const statusBody = {
+    type: 'object',
+    required: ['status'],
+    properties: { status: { type: 'string', enum: ['pending', 'processing', 'published', 'finished', 'cancelled'] } }
+  };
+  const activeBody = {
+    type: 'object',
+    required: ['isActive'],
+    properties: { isActive: { type: 'boolean' } }
+  };
+  return {
+    [`/api/${resourcePath}/{id}/soft-delete`]: { patch: operation('Borrado lógico') },
+    [`/api/${resourcePath}/{id}/restore`]: { patch: operation('Restaurar registro eliminado') },
+    [`/api/${resourcePath}/{id}/is-active`]: { patch: operation('Cambiar visibilidad', activeBody) },
+    [`/api/${resourcePath}/{id}/status`]: { patch: operation('Cambiar estado', statusBody) }
+  };
+};
 
 const options = {
   definition: {
@@ -46,7 +76,7 @@ const options = {
     info: {
       title: 'API de Football Shop',
       version: '2.0.0',
-      description: 'API de catálogo con productos, categorías, marcas, variantes e imágenes.'
+      description: 'API de catálogo con productos, categorías, marcas, variantes, imágenes, roles y usuarios.'
     },
     servers: [{ url: `http://localhost:${process.env.PORT || 3000}`, description: 'Servidor local' }],
     tags: [
@@ -54,7 +84,9 @@ const options = {
       { name: 'Categories' },
       { name: 'Brands' },
       { name: 'Variants' },
-      { name: 'Images' }
+      { name: 'Images' },
+      { name: 'Roles' },
+      { name: 'Users' }
     ],
     paths: {
       '/api/products': {
@@ -74,7 +106,7 @@ const options = {
                     category_id: id,
                     brand_id: id,
                     description: { type: 'string' },
-                    status: { type: 'string', enum: ['draft', 'active', 'archived'] }
+                    status: { type: 'string', enum: ['pending', 'processing', 'published', 'finished', 'cancelled'] }
                   }
                 }
               }
@@ -102,6 +134,38 @@ const options = {
             content: { 'application/json': { schema: { type: 'object', required: ['isActive'], properties: { isActive: { type: 'boolean' } } } } }
           },
           responses: { 200: { description: 'Visibilidad actualizada' }, 404: { description: 'No encontrado' } }
+        }
+      },
+      '/api/products/{id}/restore': {
+        patch: {
+          tags: ['Productos'],
+          summary: 'Restaurar producto eliminado',
+          parameters: [{ in: 'path', name: 'id', required: true, schema: id }],
+          responses: {
+            200: { description: 'Producto restaurado' },
+            404: { description: 'No encontrado' },
+            409: { description: 'El producto no está eliminado' }
+          }
+        }
+      },
+      '/api/products/{id}/status': {
+        patch: {
+          tags: ['Productos'],
+          summary: 'Avanzar estado del producto',
+          parameters: [{ in: 'path', name: 'id', required: true, schema: id }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['status'],
+                  properties: { status: { type: 'string', enum: ['pending', 'processing', 'published', 'finished', 'cancelled'] } }
+                }
+              }
+            }
+          },
+          responses: { 200: { description: 'Estado actualizado' }, 422: { description: 'Transición no permitida' } }
         }
       },
       '/api/products/slug/{slug}': {
@@ -141,12 +205,38 @@ const options = {
       },
       '/api/categories': resourcePath('Categories'),
       '/api/categories/{id}': resourceByIdPath('Categories'),
+      '/api/categories/slug/{slug}': {
+        get: {
+          tags: ['Categories'],
+          summary: 'Obtener categoría por slug',
+          parameters: [{ in: 'path', name: 'slug', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Categoría encontrada' }, 404: { description: 'No encontrada' } }
+        }
+      },
+      ...lifecyclePaths('categories', 'Categories'),
       '/api/brands': resourcePath('Brands'),
       '/api/brands/{id}': resourceByIdPath('Brands'),
+      '/api/brands/slug/{slug}': {
+        get: {
+          tags: ['Brands'],
+          summary: 'Obtener marca por slug',
+          parameters: [{ in: 'path', name: 'slug', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Marca encontrada' }, 404: { description: 'No encontrada' } }
+        }
+      },
+      ...lifecyclePaths('brands', 'Brands'),
       '/api/variants': resourcePath('Variants'),
       '/api/variants/{id}': resourceByIdPath('Variants'),
+      ...lifecyclePaths('variants', 'Variants'),
       '/api/images': resourcePath('Images'),
       '/api/images/{id}': resourceByIdPath('Images'),
+      ...lifecyclePaths('images', 'Images'),
+      '/api/roles': resourcePath('Roles'),
+      '/api/roles/{id}': resourceByIdPath('Roles'),
+      ...lifecyclePaths('roles', 'Roles'),
+      '/api/users': resourcePath('Users'),
+      '/api/users/{id}': resourceByIdPath('Users'),
+      ...lifecyclePaths('users', 'Users'),
       '/api/dashboard/stats': {
         get: { tags: ['Productos'], summary: 'Estadísticas del catálogo', responses: { 200: { description: 'Totales y unidades en inventario' } } }
       }

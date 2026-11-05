@@ -4,9 +4,9 @@ const schema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, unique: true, maxlength: 100 },
     slug: { type: String, required: true, trim: true, lowercase: true, unique: true },
-    status: { type: String, enum: ['draft', 'active', 'archived'], default: 'active' },
+    status: { type: String, enum: require('../utils/lifecycle').STATUSES, default: 'pending', index: true },
     isActive: { type: Boolean, default: true, index: true },
-    deletedAt: { type: Date, default: null }
+    deletedAt: { type: Date, default: null, index: true }
   },
   { timestamps: true, versionKey: false }
 );

@@ -9,9 +9,17 @@
     "seed": "node seed.js",
     "migrate:slug": "node migrations/001-product-slug.js",
     "migrate:catalog": "node migrations/002-relational-catalog.js",
-    "test": "node tests/middlewares.test.js && node tests/product.slug.test.js && node tests/catalog.relations.test.js"
+    "migrate:lifecycle": "node migrations/003-lifecycle-fields.js",
+    "test": "node tests/middlewares.test.js && node tests/product.slug.test.js && node tests/catalog.relations.test.js && node tests/catalog.validator.test.js"
   },
-  "keywords": ["api", "rest", "express", "mongodb", "swagger", "futbol"],
+  "keywords": [
+    "api",
+    "rest",
+    "express",
+    "mongodb",
+    "swagger",
+    "futbol"
+  ],
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",

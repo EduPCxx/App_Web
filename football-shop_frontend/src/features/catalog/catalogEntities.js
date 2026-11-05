@@ -2,7 +2,20 @@ import { z } from 'zod';
 
 const requiredText = (message) => z.string().trim().min(1, message);
 const objectId = (label) => z.string().regex(/^[0-9a-fA-F]{24}$/, `${label} debe ser un ID válido.`);
-const status = { name: 'status', label: 'Estado', type: 'select', required: true, options: ['draft', 'active', 'archived'] };
+const statuses = ['pending', 'processing', 'published', 'finished', 'cancelled'];
+const status = {
+  name: 'status',
+  label: 'Estado',
+  type: 'select',
+  required: true,
+  options: [
+    { value: 'pending', label: 'Pendiente' },
+    { value: 'processing', label: 'En proceso' },
+    { value: 'published', label: 'Publicado' },
+    { value: 'finished', label: 'Finalizado' },
+    { value: 'cancelled', label: 'Cancelado' }
+  ]
+};
 const active = { name: 'isActive', label: 'Activo', type: 'checkbox' };
 
 export const catalogEntities = {
@@ -19,10 +32,10 @@ export const catalogEntities = {
     schema: z.object({
       name: requiredText('El nombre es obligatorio.').max(100),
       description: z.string().max(500).optional(),
-      status: z.enum(['draft', 'active', 'archived']),
+      status: z.enum(statuses),
       isActive: z.boolean()
     }),
-    initialValues: { name: '', description: '', status: 'active', isActive: true }
+    initialValues: { name: '', description: '', status: 'pending', isActive: true }
   },
   brands: {
     label: 'Marcas',
@@ -31,10 +44,10 @@ export const catalogEntities = {
     fields: [{ name: 'name', label: 'Nombre', required: true }, status, active],
     schema: z.object({
       name: requiredText('El nombre es obligatorio.').max(100),
-      status: z.enum(['draft', 'active', 'archived']),
+      status: z.enum(statuses),
       isActive: z.boolean()
     }),
-    initialValues: { name: '', status: 'active', isActive: true }
+    initialValues: { name: '', status: 'pending', isActive: true }
   },
   variants: {
     label: 'Variantes',
@@ -70,7 +83,7 @@ export const catalogEntities = {
         }
       }, 'Los atributos deben ser un objeto JSON válido.'),
       is_default: z.boolean(),
-      status: z.enum(['draft', 'active', 'archived']),
+      status: z.enum(statuses),
       isActive: z.boolean()
     }),
     initialValues: {
@@ -82,7 +95,7 @@ export const catalogEntities = {
       compare_at_price: '',
       attributes: '{}',
       is_default: false,
-      status: 'active',
+      status: 'pending',
       isActive: true
     }
   },
@@ -109,7 +122,7 @@ export const catalogEntities = {
       title: z.string().max(250).optional(),
       sort_order: z.coerce.number().int().min(0),
       is_primary: z.boolean(),
-      status: z.enum(['draft', 'active', 'archived']),
+      status: z.enum(statuses),
       isActive: z.boolean()
     }),
     initialValues: {
@@ -120,7 +133,7 @@ export const catalogEntities = {
       title: '',
       sort_order: 0,
       is_primary: false,
-      status: 'active',
+      status: 'pending',
       isActive: true
     }
   },
@@ -132,10 +145,10 @@ export const catalogEntities = {
     schema: z.object({
       name: requiredText('El nombre es obligatorio.').max(100),
       description: z.string().max(500).optional(),
-      status: z.enum(['draft', 'active', 'archived']),
+      status: z.enum(statuses),
       isActive: z.boolean()
     }),
-    initialValues: { name: '', description: '', status: 'active', isActive: true },
+    initialValues: { name: '', description: '', status: 'pending', isActive: true },
     protected: true
   },
   users: {
@@ -155,10 +168,18 @@ export const catalogEntities = {
       name: requiredText('El nombre es obligatorio.').max(150),
       email: z.string().email('Indica un correo válido.'),
       password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
-      status: z.enum(['draft', 'active', 'archived']),
+      status: z.enum(statuses),
       isActive: z.boolean()
     }),
-    initialValues: { role_id: '', name: '', email: '', password: '', status: 'active', isActive: true },
+    updateSchema: z.object({
+      role_id: objectId('El rol'),
+      name: requiredText('El nombre es obligatorio.').max(150),
+      email: z.string().email('Indica un correo válido.'),
+      password: z.union([z.literal(''), z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.')]).optional(),
+      status: z.enum(statuses),
+      isActive: z.boolean()
+    }),
+    initialValues: { role_id: '', name: '', email: '', password: '', status: 'pending', isActive: true },
     protected: true
   }
 };

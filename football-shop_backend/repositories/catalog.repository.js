@@ -46,6 +46,14 @@ const findAll = async (type, { skip = 0, limit = 100, sort = { createdAt: -1 } }
   }
 };
 
+const count = async (type) => {
+  try {
+    return await models[type].countDocuments({ deletedAt: null });
+  } catch (error) {
+    throw wrapDbError(error, `contar ${type}`);
+  }
+};
+
 const findById = async (type, id) => {
   try {
     let query = models[type].findOne({ _id: id, deletedAt: null });
@@ -53,6 +61,26 @@ const findById = async (type, id) => {
     return normalizeDecimals(await query.lean());
   } catch (error) {
     throw wrapDbError(error, `obtener ${type}`);
+  }
+};
+
+const findBySlug = async (type, slug) => {
+  try {
+    let query = models[type].findOne({ slug, deletedAt: null });
+    for (const path of populatePaths[type] || []) query = query.populate(path);
+    return normalizeDecimals(await query.lean());
+  } catch (error) {
+    throw wrapDbError(error, `obtener ${type} por slug`);
+  }
+};
+
+const findIncludingDeleted = async (type, id) => {
+  try {
+    let query = models[type].findById(id);
+    for (const path of populatePaths[type] || []) query = query.populate(path);
+    return normalizeDecimals(await query.lean());
+  } catch (error) {
+    throw wrapDbError(error, `obtener ${type}, incluidos los eliminados`);
   }
 };
 
@@ -83,6 +111,58 @@ const deleteById = async (type, id) => {
     return await models[type].findOneAndDelete({ _id: id, deletedAt: null }).lean();
   } catch (error) {
     throw wrapDbError(error, `eliminar ${type}`);
+  }
+};
+
+const softDeleteById = async (type, id) => {
+  try {
+    const document = await models[type].findOneAndUpdate(
+      { _id: id, deletedAt: null },
+      { deletedAt: new Date() },
+      { new: true }
+    );
+    return document ? findIncludingDeleted(type, document._id) : null;
+  } catch (error) {
+    throw wrapDbError(error, `eliminar lógicamente ${type}`);
+  }
+};
+
+const restoreById = async (type, id) => {
+  try {
+    const document = await models[type].findOneAndUpdate(
+      { _id: id, deletedAt: { $ne: null } },
+      { deletedAt: null },
+      { new: true }
+    );
+    return document ? findById(type, document._id) : null;
+  } catch (error) {
+    throw wrapDbError(error, `restaurar ${type}`);
+  }
+};
+
+const setActiveById = async (type, id, isActive) => {
+  try {
+    const document = await models[type].findOneAndUpdate(
+      { _id: id, deletedAt: null },
+      { isActive },
+      { new: true }
+    );
+    return document ? findById(type, document._id) : null;
+  } catch (error) {
+    throw wrapDbError(error, `cambiar la visibilidad de ${type}`);
+  }
+};
+
+const setStatusById = async (type, id, status) => {
+  try {
+    const document = await models[type].findOneAndUpdate(
+      { _id: id, deletedAt: null },
+      { status },
+      { new: true, runValidators: true }
+    );
+    return document ? findById(type, document._id) : null;
+  } catch (error) {
+    throw wrapDbError(error, `cambiar el estado de ${type}`);
   }
 };
 
@@ -131,4 +211,22 @@ const findDuplicateFlag = async (type, filter, excludeId) => {
   }
 };
 
-module.exports = { models, findAll, findById, create, updateById, deleteById, exists, existsBySlug, hasReferences, findDuplicateFlag };
+module.exports = {
+  models,
+  findAll,
+  count,
+  findById,
+  findBySlug,
+  findIncludingDeleted,
+  create,
+  updateById,
+  deleteById,
+  softDeleteById,
+  restoreById,
+  setActiveById,
+  setStatusById,
+  exists,
+  existsBySlug,
+  hasReferences,
+  findDuplicateFlag
+};

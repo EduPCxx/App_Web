@@ -20,16 +20,38 @@ export default function CatalogListPage({ type, useResource }) {
     if (confirmed && (await remove(item._id))) notifySuccess(`${entity.singular} eliminado`);
   };
 
+  const detailColumns = {
+    categories: [
+      { key: 'slug', header: 'Slug', render: (item) => item.slug || '—' },
+      { key: 'description', header: 'Descripción', render: (item) => item.description || '—' }
+    ],
+    variants: [
+      { key: 'sku', header: 'SKU', render: (item) => item.sku || '—' },
+      { key: 'price', header: 'Precio', render: (item) => item.price ?? '—' },
+      { key: 'stock', header: 'Stock', render: (item) => item.stock ?? '—' }
+    ],
+    roles: [{ key: 'description', header: 'Descripción', render: (item) => item.description || '—' }],
+    users: [
+      { key: 'role', header: 'Rol', render: (item) => item.role_id?.name || '—' },
+      { key: 'email', header: 'Correo', render: (item) => item.email || '—' }
+    ]
+  };
   const columns = [
+    ...(type === 'variants' ? [detailColumns.variants[0]] : []),
     {
       key: 'name',
       header: 'Nombre',
       render: (item) => item.name || item.title || item.url || item.sku || item._id
     },
+    ...(type === 'variants' ? detailColumns.variants.slice(1) : detailColumns[type] || []),
     {
       key: 'status',
       header: 'Estado',
-      render: (item) => (item.isActive === false ? 'Inactivo' : item.status || 'Activo')
+      render: (item) => (
+        <span className={item.isActive === false ? 'font-semibold text-red-400' : 'font-semibold text-emerald-400'}>
+          {item.isActive === false ? 'Inactivo' : item.status || 'Activo'}
+        </span>
+      )
     },
     {
       key: 'actions',

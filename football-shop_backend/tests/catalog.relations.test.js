@@ -5,10 +5,10 @@ const path = require('path');
 const records = {
   products: new Map([['product-1', { _id: 'product-1' }]]),
   variants: new Map(),
-  categories: new Map([['category-1', { _id: 'category-1' }]]),
+  categories: new Map([['category-1', { _id: 'category-1', status: 'pending', deletedAt: null }]]),
   brands: new Map([['brand-1', { _id: 'brand-1' }]]),
   images: new Map([['image-1', { _id: 'image-1', entity_type: 'product', entity_id: 'product-1' }]]),
-  roles: new Map([['role-1', { _id: 'role-1' }]]),
+  roles: new Map([['role-1', { _id: 'role-1', status: 'pending', deletedAt: null }]]),
   users: new Map()
 };
 let nextId = 0;
@@ -17,8 +17,9 @@ const fakeRepository = {
   existsBySlug: async () => false,
   findAll: async (type) => Array.from(records[type].values()),
   findById: async (type, id) => records[type].get(String(id)) || null,
+  findIncludingDeleted: async (type, id) => records[type].get(String(id)) || null,
   create: async (type, data) => {
-    const record = { _id: `new-${++nextId}`, ...data };
+    const record = { _id: `new-${++nextId}`, status: 'pending', deletedAt: null, ...data };
     records[type].set(record._id, record);
     return record;
   },
@@ -29,6 +30,30 @@ const fakeRepository = {
     return record;
   },
   deleteById: async (type, id) => records[type].get(String(id)),
+  softDeleteById: async (type, id) => {
+    const record = records[type].get(String(id));
+    if (!record || record.deletedAt) return null;
+    record.deletedAt = new Date();
+    return record;
+  },
+  restoreById: async (type, id) => {
+    const record = records[type].get(String(id));
+    if (!record || !record.deletedAt) return null;
+    record.deletedAt = null;
+    return record;
+  },
+  setActiveById: async (type, id, isActive) => {
+    const record = records[type].get(String(id));
+    if (!record || record.deletedAt) return null;
+    record.isActive = isActive;
+    return record;
+  },
+  setStatusById: async (type, id, status) => {
+    const record = records[type].get(String(id));
+    if (!record || record.deletedAt) return null;
+    record.status = status;
+    return record;
+  },
   hasReferences: async () => false,
   findDuplicateFlag: async (type, filter, excludeId) =>
     Array.from(records[type].values()).some((row) =>
@@ -134,6 +159,16 @@ const tests = {
     });
     assert.match(user.password_hash, /^scrypt\$[a-f0-9]+\$[a-f0-9]+$/);
     assert.strictEqual(Object.hasOwn(user, 'password'), false);
+  },
+  async appliesLifecycleTransitions() {
+    const updated = await service.setStatus('categories', 'category-1', 'processing');
+    assert.strictEqual(updated.status, 'processing');
+    await expectError(() => service.setStatus('categories', 'category-1', 'finished'), 422, 'INVALID_STATUS_TRANSITION');
+    const removed = await service.softDelete('categories', 'category-1');
+    assert.ok(removed.deletedAt);
+    await expectError(() => service.softDelete('categories', 'category-1'), 409, 'ALREADY_DELETED');
+    assert.strictEqual((await service.restore('categories', 'category-1')).deletedAt, null);
+    await expectError(() => service.restore('categories', 'category-1'), 409, 'NOT_DELETED');
   }
 };
 

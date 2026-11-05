@@ -8,6 +8,7 @@ const roleRepository = require('../repositories/role.repository');
 const userRepository = require('../repositories/user.repository');
 const AppError = require('../utils/AppError');
 const { generateUniqueSlug } = require('../utils/slugify');
+const { assertStatusTransition } = require('../utils/lifecycle');
 
 const repositories = {
   categories: categoryRepository,
@@ -89,9 +90,21 @@ const withSlug = async (type, data, excludeId) => {
   return { ...data, slug: candidate };
 };
 
-const list = (type, options) => repositoryFor(type).findAll(options);
+const list = async (type, { page = 1, limit = 10 } = {}) => {
+  const [items, total] = await Promise.all([
+    repositoryFor(type).findAll({ skip: (page - 1) * limit, limit }),
+    catalogRepository.count(type)
+  ]);
+  return { items, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) || 1 } };
+};
 const getById = async (type, id) => {
   const document = await repositoryFor(type).findById(id);
+  if (!document) throw notFound(type);
+  return document;
+};
+
+const getBySlug = async (type, slug) => {
+  const document = await catalogRepository.findBySlug(type, slug);
   if (!document) throw notFound(type);
   return document;
 };
@@ -110,6 +123,7 @@ const create = async (type, data) => {
 const update = async (type, id, data) => {
   const current = await getById(type, id);
   const payload = { ...data };
+  if (payload.status !== undefined) assertStatusTransition(current.status, payload.status);
   if (type === 'images') {
     if (!payload.entity_type) payload.entity_type = current.entity_type;
     if (!payload.entity_id) payload.entity_id = current.entity_id._id || current.entity_id;
@@ -149,6 +163,39 @@ const remove = async (type, id) => {
   return repositoryFor(type).deleteById(current._id);
 };
 
+const softDelete = async (type, id) => {
+  const current = await catalogRepository.findIncludingDeleted(type, id);
+  if (!current) throw notFound(type);
+  if (current.deletedAt) throw new AppError('El registro ya está eliminado', 409, 'ALREADY_DELETED');
+  const document = await catalogRepository.softDeleteById(type, id);
+  if (!document) throw notFound(type);
+  return document;
+};
+
+const restore = async (type, id) => {
+  const current = await catalogRepository.findIncludingDeleted(type, id);
+  if (!current) throw notFound(type);
+  if (!current.deletedAt) throw new AppError('El registro no está eliminado', 409, 'NOT_DELETED');
+  const document = await catalogRepository.restoreById(type, id);
+  if (!document) throw notFound(type);
+  return document;
+};
+
+const setActive = async (type, id, isActive) => {
+  const document = await catalogRepository.setActiveById(type, id, isActive);
+  if (!document) throw notFound(type);
+  return document;
+};
+
+const setStatus = async (type, id, status) => {
+  const current = await getById(type, id);
+  assertStatusTransition(current.status, status);
+  if (current.status === status) return current;
+  const document = await catalogRepository.setStatusById(type, id, status);
+  if (!document) throw notFound(type);
+  return document;
+};
+
 const hashPassword = async (password) => {
   const salt = crypto.randomBytes(16).toString('hex');
   const derived = await new Promise((resolve, reject) => {
@@ -157,4 +204,4 @@ const hashPassword = async (password) => {
   return `scrypt$${salt}$${derived.toString('hex')}`;
 };
 
-module.exports = { list, getById, create, update, remove, hashPassword };
+module.exports = { list, getById, getBySlug, create, update, remove, softDelete, restore, setActive, setStatus, hashPassword };

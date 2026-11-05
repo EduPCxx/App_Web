@@ -50,6 +50,14 @@ const findBySlug = async (slug) => {
   }
 };
 
+const findBySlugIncludingDeleted = async (slug) => {
+  try {
+    return normalizeDecimals(await populateProduct(Product.findOne({ slug })).lean());
+  } catch (error) {
+    throw wrapDbError(error, 'obtener el producto por slug, incluidos los eliminados');
+  }
+};
+
 const create = async (data) => {
   try {
     const product = await Product.create(data);
@@ -89,7 +97,35 @@ const softDeleteById = async (id) => {
   }
 };
 
-const findByIdIncludingDeleted = async (id) => normalizeDecimals(await populateProduct(Product.findById(id)).lean());
+const findByIdIncludingDeleted = async (id) => {
+  try {
+    return normalizeDecimals(await populateProduct(Product.findById(id)).lean());
+  } catch (error) {
+    throw wrapDbError(error, 'obtener el producto, incluido si está eliminado');
+  }
+};
+
+const restoreById = async (id) => {
+  try {
+    const product = await Product.findOneAndUpdate(
+      { _id: id, deletedAt: { $ne: null } },
+      { deletedAt: null },
+      { new: true }
+    );
+    return product ? findById(product._id) : null;
+  } catch (error) {
+    throw wrapDbError(error, 'restaurar el producto');
+  }
+};
+
+const setStatusById = async (id, status) => {
+  try {
+    const product = await Product.findOneAndUpdate(scoped({ _id: id }), { status }, { new: true, runValidators: true });
+    return product ? findById(product._id) : null;
+  } catch (error) {
+    throw wrapDbError(error, 'cambiar el estado del producto');
+  }
+};
 
 const setActiveBySlug = async (slug, isActive) => {
   try {
@@ -177,10 +213,14 @@ module.exports = {
   count,
   findById,
   findBySlug,
+  findBySlugIncludingDeleted,
   create,
   updateById,
   softDeleteBySlug,
   softDeleteById,
+  findByIdIncludingDeleted,
+  restoreById,
+  setStatusById,
   setActiveBySlug,
   setActiveById,
   getStatsRaw,

@@ -7,7 +7,7 @@ Stack: React + Vite, shadcn/ui + Tailwind, Axios, React Hook Form + Zod, SweetAl
 ## Requisitos
 
 - Node.js 18+
-- Backend en `http://localhost:3000` con la migración aplicada: `npm run migrate:slug`
+- Backend en `http://localhost:3000` con las migraciones de catálogo y ciclo de vida aplicadas
 
 ## Uso
 
@@ -32,9 +32,9 @@ npm run build    # build de producción en dist/
 
 ## Gestión del catálogo
 
-El panel también permite gestionar categorías (`/categories`), marcas (`/brands`), variantes (`/variants`) e imágenes (`/images`) mediante listados y formularios conectados a sus endpoints CRUD. Los formularios de productos seleccionan categoría y marca; el precio y el stock se muestran a partir de las variantes asociadas.
+El panel también permite gestionar categorías (`/categories`), marcas (`/brands`), variantes (`/variants`), roles (`/roles`) y usuarios (`/users`) desde tablas y formularios normales. Las imágenes se gestionan desde los formularios de producto pegando URLs; se pueden previsualizar, reordenar, marcar la principal y quitar antes de guardar. El panel no muestra una sección de imágenes en el menú lateral.
 
-Los modelos Role y User tienen sus servicios, hooks y configuración de formularios preparados, pero sus páginas muestran que la gestión está deshabilitada: el backend todavía no monta esas rutas hasta disponer de autenticación y autorización.
+El precio, stock y SKU del producto se derivan de sus variantes. Categorías y variantes muestran sus campos descriptivos y de inventario en las tablas.
 
 ## Arquitectura
 

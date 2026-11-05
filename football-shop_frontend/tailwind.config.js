@@ -17,7 +17,7 @@ export default {
       },
       boxShadow: {
         soft: '0 18px 48px -30px rgba(0, 0, 0, 0.72)',
-        glow: '0 0 28px -14px hsl(42 94% 58% / 0.32)'
+        glow: '0 0 28px -14px hsl(42 70% 58% / 0.32)'
       },
       borderRadius: {
         xl: '1.125rem',
@@ -25,7 +25,7 @@ export default {
         '3xl': '1.875rem'
       },
       fontFamily: {
-        sans: ['Geist', 'Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        sans: ['Geist', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
       }
     }

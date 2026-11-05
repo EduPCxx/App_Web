@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,14 +11,14 @@
     --foreground: 0 0% 96%;
     --card: 0 0% 10%;
     --card-foreground: 0 0% 96%;
-    --primary: 42 94% 58%;
+    --primary: 42 70% 58%;
     --primary-foreground: 0 0% 0%;
     --muted: 0 0% 17%;
     --muted-foreground: 0 0% 72%;
     --border: 0 0% 18%;
     --input: 0 0% 20%;
-    --gold: 42 94% 58%;
-    --ring: 42 94% 58%;
+    --gold: 42 70% 58%;
+    --ring: 42 70% 58%;
     --destructive: 0 68% 60%;
     --destructive-foreground: 0 0% 100%;
     --radius: 1rem;
@@ -36,16 +36,6 @@
 
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.015)),
-      repeating-linear-gradient(
-        0deg,
-        rgba(255, 255, 255, 0.02) 0,
-        rgba(255, 255, 255, 0.02) 1px,
-        transparent 1px,
-        transparent 3px
-      );
-    background-attachment: fixed;
     font-feature-settings: 'tnum' 1, 'liga' 1;
   }
 

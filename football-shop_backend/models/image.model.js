@@ -15,9 +15,9 @@ const schema = new mongoose.Schema(
     title: { type: String, trim: true, default: '' },
     sort_order: { type: Number, min: 0, validate: Number.isInteger, default: 0 },
     is_primary: { type: Boolean, default: false },
-    status: { type: String, enum: ['draft', 'active', 'archived'], default: 'active' },
+    status: { type: String, enum: require('../utils/lifecycle').STATUSES, default: 'pending', index: true },
     isActive: { type: Boolean, default: true },
-    deletedAt: { type: Date, default: null }
+    deletedAt: { type: Date, default: null, index: true }
   },
   { timestamps: true, versionKey: false }
 );

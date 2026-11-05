@@ -1,4 +1,5 @@
 require('dotenv').config();
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const Category = require('./models/category.model');
@@ -6,7 +7,10 @@ const Brand = require('./models/brand.model');
 const Product = require('./models/product.model');
 const Variant = require('./models/variant.model');
 const Role = require('./models/role.model');
+const User = require('./models/user.model');
+const Image = require('./models/image.model');
 const { generateSlug } = require('./utils/slugify');
+const { hashPassword } = require('./services/catalog.service');
 
 const categories = ['Camisetas', 'Botas', 'Balones', 'Equipamiento', 'Accesorios'];
 const brands = ['Nike', 'Adidas', 'Puma'];
@@ -33,10 +37,40 @@ const seed = async () => {
     const categoryByName = new Map();
     const brandByName = new Map();
 
+    const roleIds = new Map();
+    for (const role of [
+      { name: 'admin', description: 'Administración de la tienda' },
+      { name: 'editor', description: 'Gestión del catálogo' },
+      { name: 'customer', description: 'Cliente de la tienda' }
+    ]) {
+      const savedRole = await Role.findOneAndUpdate(
+        { name: role.name },
+        { $setOnInsert: { ...role, status: 'pending', isActive: true } },
+        { new: true, upsert: true, runValidators: true }
+      );
+      roleIds.set(role.name, savedRole._id);
+    }
+
+    const seededPassword = process.env.SEED_USER_PASSWORD || crypto.randomBytes(32).toString('hex');
+    await User.updateOne(
+      { email: 'cliente@example.test' },
+      {
+        $setOnInsert: {
+          role_id: roleIds.get('customer'),
+          name: 'Cliente de ejemplo',
+          email: 'cliente@example.test',
+          password_hash: await hashPassword(seededPassword),
+          status: 'pending',
+          isActive: true
+        }
+      },
+      { upsert: true, runValidators: true }
+    );
+
     for (const name of categories) {
       const category = await Category.findOneAndUpdate(
         { slug: generateSlug(name) },
-        { $setOnInsert: { name, slug: generateSlug(name), status: 'active', isActive: true } },
+        { $setOnInsert: { name, slug: generateSlug(name), status: 'pending', isActive: true } },
         { new: true, upsert: true, runValidators: true }
       );
       categoryByName.set(name, category._id);
@@ -45,21 +79,14 @@ const seed = async () => {
     for (const name of brands) {
       const brand = await Brand.findOneAndUpdate(
         { slug: generateSlug(name) },
-        { $setOnInsert: { name, slug: generateSlug(name), status: 'active', isActive: true } },
+        { $setOnInsert: { name, slug: generateSlug(name), status: 'pending', isActive: true } },
         { new: true, upsert: true, runValidators: true }
       );
       brandByName.set(name, brand._id);
     }
 
-    for (const role of [
-      { name: 'admin', description: 'Administración de la tienda' },
-      { name: 'editor', description: 'Gestión del catálogo' },
-      { name: 'customer', description: 'Cliente de la tienda' }
-    ]) {
-      await Role.updateOne({ name: role.name }, { $setOnInsert: role }, { upsert: true, runValidators: true });
-    }
-
     let inserted = 0;
+    let imagesAdded = 0;
     for (const item of products) {
       let product = await Product.findOne({ slug: generateSlug(item.name) });
       if (!product) {
@@ -69,7 +96,7 @@ const seed = async () => {
           category_id: categoryByName.get(item.category),
           brand_id: brandByName.get(item.brand),
           description: item.description,
-          status: 'active',
+          status: 'pending',
           isActive: true
         });
         inserted += 1;
@@ -85,15 +112,33 @@ const seed = async () => {
             stock: item.stock,
             attributes: { size: item.size, team: item.team },
             is_default: true,
-            status: 'active',
+            status: 'pending',
             isActive: true
           }
         },
         { upsert: true, runValidators: true }
       );
+      const imageExists = await Image.exists({ entity_type: 'product', entity_id: product._id });
+      if (!imageExists) {
+        await Image.create({
+          entity_type: 'product',
+          entity_model: 'Product',
+          entity_id: product._id,
+          url: `https://placehold.co/800x1000?text=${encodeURIComponent(item.name)}`,
+          alt_text: item.name,
+          title: item.name,
+          sort_order: 0,
+          is_primary: true,
+          status: 'pending',
+          isActive: true
+        });
+        imagesAdded += 1;
+      }
     }
 
-    console.log(`Seed completado: ${categories.length} categorías, ${brands.length} marcas y ${inserted} productos nuevos; variantes y roles verificadas.`);
+    console.log(
+      `Seed completado: ${categories.length} categorías, ${brands.length} marcas, ${inserted} productos nuevos, ${imagesAdded} imágenes nuevas; variantes, roles y usuario de ejemplo verificados.`
+    );
   } catch (error) {
     console.error('Error en el seed:', error.message);
     process.exitCode = 1;

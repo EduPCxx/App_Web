@@ -2,6 +2,7 @@ const productRepository = require('../repositories/product.repository');
 const catalogRepository = require('../repositories/catalog.repository');
 const AppError = require('../utils/AppError');
 const { generateUniqueSlug } = require('../utils/slugify');
+const { assertStatusTransition } = require('../utils/lifecycle');
 
 const RESERVED_SLUGS = ['new'];
 const MAX_SLUG_RETRIES = 3;
@@ -49,6 +50,7 @@ const assertRelations = async (data) => {
 
 const buildUpdatePayload = async (current, data) => {
   const payload = { ...data };
+  if (payload.status !== undefined) assertStatusTransition(current.status, payload.status);
   if (data.name && data.name !== current.name) {
     payload.slug = await generateUniqueSlug(data.name, slugTaken(current._id));
   }
@@ -98,13 +100,39 @@ const updateProduct = async (id, data) => updateExisting(await getProductById(id
 const updateProductBySlug = async (slug, data) => updateExisting(await getProductBySlug(slug), data);
 
 const softDeleteProductBySlug = async (slug) => {
+  const existing = await productRepository.findBySlugIncludingDeleted(slug);
+  if (existing && existing.deletedAt) {
+    throw new AppError('El registro ya está eliminado', 409, 'ALREADY_DELETED');
+  }
   const product = await productRepository.softDeleteBySlug(slug);
   if (!product) throw notFound();
   return product;
 };
 
 const softDeleteProduct = async (id) => {
+  const existing = await productRepository.findByIdIncludingDeleted(id);
+  if (existing && existing.deletedAt) {
+    throw new AppError('El registro ya está eliminado', 409, 'ALREADY_DELETED');
+  }
   const product = await productRepository.softDeleteById(id);
+  if (!product) throw notFound();
+  return product;
+};
+
+const restoreProduct = async (id) => {
+  const current = await productRepository.findByIdIncludingDeleted(id);
+  if (!current) throw notFound();
+  if (!current.deletedAt) throw new AppError('El registro no está eliminado', 409, 'NOT_DELETED');
+  const product = await productRepository.restoreById(id);
+  if (!product) throw notFound();
+  return product;
+};
+
+const setProductStatus = async (id, status) => {
+  const current = await getProductById(id);
+  assertStatusTransition(current.status, status);
+  if (current.status === status) return current;
+  const product = await productRepository.setStatusById(id, status);
   if (!product) throw notFound();
   return product;
 };
@@ -140,6 +168,8 @@ module.exports = {
   deleteProduct,
   softDeleteProduct,
   softDeleteProductBySlug,
+  restoreProduct,
+  setProductStatus,
   setProductActive,
   setProductActiveBySlug
 };

@@ -8,7 +8,7 @@ import ErrorState from '@/components/common/ErrorState';
 import { TableSkeleton } from '@/components/common/Skeletons';
 import useProducts from '@/hooks/useProducts';
 import { confirmAction, notifySuccess } from '@/utils/alerts';
-import { formatPrice, formatSubtitle, getProductPrice, getProductStock, isProductActive } from '@/utils/format';
+import { formatPrice, formatSubtitle, getProductPrice, getProductSku, getProductStock, isProductActive } from '@/utils/format';
 
 export default function ProductsListPage() {
   const { products, loading, error, loadProducts, setProductActive, removeProduct } = useProducts();

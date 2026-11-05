@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const STATUSES = ['draft', 'active', 'archived'];
+const { STATUSES } = require('../utils/lifecycle');
 
 const productSchema = new mongoose.Schema(
   {
@@ -31,7 +31,7 @@ const productSchema = new mongoose.Schema(
       trim: true
     },
     description: { type: String, trim: true, maxlength: 1000, default: '' },
-    status: { type: String, enum: STATUSES, default: 'draft', index: true },
+    status: { type: String, enum: STATUSES, default: 'pending', index: true },
     isActive: { type: Boolean, default: true, index: true },
     deletedAt: { type: Date, default: null, index: true }
   },

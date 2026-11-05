@@ -29,6 +29,14 @@ const normalizeError = (err) => {
     return new AppError('JSON mal formado en el cuerpo de la petición', 400, 'INVALID_JSON');
   }
 
+  if (err.name === 'MulterError' && err.code === 'LIMIT_FILE_SIZE') {
+    return new AppError('La imagen supera el límite de 5 MB', 413, 'FILE_TOO_LARGE');
+  }
+
+  if (err.name === 'MulterError') {
+    return new AppError('No se pudo procesar el archivo enviado', 400, 'INVALID_UPLOAD');
+  }
+
   return err;
 };
 

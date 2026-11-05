@@ -1,19 +1,17 @@
-import { FiLock } from 'react-icons/fi';
-import { Card } from '@/components/ui/card';
-import { catalogEntities } from '@/features/catalog/catalogEntities';
+import { useLocation } from 'react-router-dom';
+import CatalogFormPage from '@/features/catalog/components/CatalogFormPage';
+import CatalogListPage from '@/features/catalog/components/CatalogListPage';
+import useRoles from '@/hooks/useRoles';
+import useUsers from '@/hooks/useUsers';
+
+const resourceHooks = { roles: useRoles, users: useUsers };
 
 export default function ProtectedModelPage({ type }) {
-  const { label } = catalogEntities[type];
+  const location = useLocation();
+  const editing = /\/[^/]+\/edit$/.test(location.pathname);
+  const creating = location.pathname.endsWith('/new');
 
-  return (
-    <section className="mx-auto max-w-2xl p-4 sm:p-6">
-      <Card className="flex flex-col items-center gap-3 p-8 text-center">
-        <FiLock size={24} aria-hidden="true" />
-        <h1 className="text-xl font-bold">Gestión de {label.toLowerCase()} deshabilitada</h1>
-        <p className="text-sm text-muted-foreground">
-          La API todavía no expone este recurso. Se habilitará cuando el backend tenga autenticación y autorización.
-        </p>
-      </Card>
-    </section>
-  );
+  return editing || creating
+    ? <CatalogFormPage key={location.pathname} type={type} useResource={resourceHooks[type]} />
+    : <CatalogListPage type={type} useResource={resourceHooks[type]} />;
 }

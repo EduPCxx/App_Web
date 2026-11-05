@@ -16,18 +16,22 @@ const fakeRepo = {
   count: async () => db.filter(live).length,
   findById: async (id) => db.find((d) => d._id === id && live(d)) || null,
   findBySlug: async (slug) => db.find((d) => d.slug === slug && live(d)) || null,
+  findByIdIncludingDeleted: async (id) => db.find((d) => d._id === id) || null,
+  findBySlugIncludingDeleted: async (slug) => db.find((d) => d.slug === slug) || null,
   create: async (data) => {
     if (failNextCreateWithCollision) {
       failNextCreateWithCollision = false;
       throw Object.assign(new Error('dup'), { code: 11000, keyPattern: { slug: 1 } });
     }
-    const doc = { _id: String(++seq), deletedAt: null, ...data };
+    const doc = { _id: String(++seq), deletedAt: null, status: 'pending', ...data };
     db.push(doc);
     return doc;
   },
   updateById: async (id, data) => { const d = db.find((x) => x._id === id && live(x)); return d ? Object.assign(d, data) : null; },
   softDeleteBySlug: async (slug) => { const d = db.find((x) => x.slug === slug && live(x)); return d ? Object.assign(d, { deletedAt: new Date() }) : null; },
   softDeleteById: async (id) => { const d = db.find((x) => x._id === id && live(x)); return d ? Object.assign(d, { deletedAt: new Date() }) : null; },
+  restoreById: async (id) => { const d = db.find((x) => x._id === id && x.deletedAt); return d ? Object.assign(d, { deletedAt: null }) : null; },
+  setStatusById: async (id, status) => { const d = db.find((x) => x._id === id && live(x)); return d ? Object.assign(d, { status }) : null; },
   setActiveBySlug: async (slug, isActive) => { const d = db.find((x) => x.slug === slug && live(x)); return d ? Object.assign(d, { isActive }) : null; },
   setActiveById: async (id, isActive) => { const d = db.find((x) => x._id === id && live(x)); return d ? Object.assign(d, { isActive }) : null; },
   getStatsRaw: async () => statsRaw,
@@ -88,7 +92,7 @@ const tests = {
     await fails(() => svc.getProductBySlug(p.slug), 404);
     await fails(() => svc.getProductById(p._id), 404);
     await fails(() => svc.updateProductBySlug(p.slug, { price: 1 }), 404);
-    await fails(() => svc.softDeleteProductBySlug(p.slug), 404);
+    await fails(() => svc.softDeleteProductBySlug(p.slug), 409);
     const { items } = await svc.listProducts({ page: 1, limit: 10 });
     assert.ok(!items.some((i) => i.slug === p.slug));
   },
@@ -98,6 +102,17 @@ const tests = {
     const deleted = await svc.softDeleteProduct(p._id);
     assert.ok(deleted.deletedAt);
     await fails(() => svc.getProductById(p._id), 404);
+  },
+  async restauracionYTransicionesDeEstado() {
+    const p = await svc.createProduct({ ...base, name: 'Ciclo de vida' });
+    await fails(() => svc.setProductStatus(p._id, 'published'), 422);
+    assert.strictEqual((await svc.setProductStatus(p._id, 'processing')).status, 'processing');
+    assert.strictEqual((await svc.setProductStatus(p._id, 'published')).status, 'published');
+    assert.strictEqual((await svc.setProductStatus(p._id, 'finished')).status, 'finished');
+    await fails(() => svc.setProductStatus(p._id, 'cancelled'), 422);
+    await svc.softDeleteProduct(p._id);
+    assert.strictEqual((await svc.restoreProduct(p._id)).deletedAt, null);
+    await fails(() => svc.restoreProduct(p._id), 409);
   },
   async activarYDesactivar() {
     const p = await svc.createProduct({ ...base, name: 'Toggle' });

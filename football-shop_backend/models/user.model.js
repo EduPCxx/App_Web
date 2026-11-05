@@ -21,8 +21,8 @@ const schema = new mongoose.Schema(
     isActive: { type: Boolean, default: true, index: true },
     email_verified_at: { type: Date, default: null },
     last_login_at: { type: Date, default: null },
-    status: { type: String, enum: ['draft', 'active', 'archived'], default: 'active' },
-    deletedAt: { type: Date, default: null }
+    status: { type: String, enum: require('../utils/lifecycle').STATUSES, default: 'pending', index: true },
+    deletedAt: { type: Date, default: null, index: true }
   },
   { timestamps: true, versionKey: false, toJSON: { transform: (_doc, ret) => { delete ret.password_hash; return ret; } } }
 );
