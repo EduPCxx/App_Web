@@ -91,6 +91,8 @@ Los listados aceptan `page` (por defecto `1`) y `limit` (por defecto `10`, máxi
 
 Los endpoints de categorías, marcas, productos, variantes e imágenes soportan consulta por ID y, cuando corresponda, actualización con `PUT` y eliminación con `DELETE`. No se elimina una entidad si tiene recursos dependientes.
 
+En borrado lógico, un padre con hijos activos (`deletedAt: null`) no puede eliminarse: `PATCH /:id/soft-delete` responde `409` con código `HAS_DEPENDENTS`. Esta regla aplica a categorías, marcas y roles, con la intención de evitar dejar referencias huérfanas en el catálogo y en la seguridad del sistema.
+
 Todos los recursos admiten borrado lógico y restauración (`PATCH /:id/soft-delete` y `PATCH /:id/restore`), cambio de visibilidad (`PATCH /:id/is-active`, cuerpo `{ "isActive": false }`) y transición de estado (`PATCH /:id/status`, cuerpo `{ "status": "processing" }`). Los estados avanzan `pending → processing → published → finished`; `cancelled` también puede alcanzarse desde `pending`, `processing` o `published`. `finished` y `cancelled` son finales.
 
 ## Gestión de imágenes desde el formulario de producto

@@ -54,7 +54,18 @@ const fakeRepository = {
     record.status = status;
     return record;
   },
-  hasReferences: async () => false,
+  hasReferences: async (type, id) => {
+    if (type === 'categories') {
+      return Array.from(records.products.values()).some((product) => String(product.category_id) === String(id) && product.deletedAt == null);
+    }
+    if (type === 'brands') {
+      return Array.from(records.products.values()).some((product) => String(product.brand_id) === String(id) && product.deletedAt == null);
+    }
+    if (type === 'roles') {
+      return Array.from(records.users.values()).some((user) => String(user.role_id) === String(id) && user.deletedAt == null);
+    }
+    return false;
+  },
   findDuplicateFlag: async (type, filter, excludeId) =>
     Array.from(records[type].values()).some((row) =>
       row._id !== excludeId && Object.entries(filter).every(([key, value]) => row[key] === value)
@@ -169,6 +180,11 @@ const tests = {
     await expectError(() => service.softDelete('categories', 'category-1'), 409, 'ALREADY_DELETED');
     assert.strictEqual((await service.restore('categories', 'category-1')).deletedAt, null);
     await expectError(() => service.restore('categories', 'category-1'), 409, 'NOT_DELETED');
+  },
+  async rejectsSoftDeleteWithActiveChildren() {
+    records.products.set('product-2', { _id: 'product-2', category_id: 'category-1', brand_id: 'brand-1', deletedAt: null });
+    await expectError(() => service.softDelete('categories', 'category-1'), 409, 'HAS_DEPENDENTS');
+    records.products.delete('product-2');
   }
 };
 

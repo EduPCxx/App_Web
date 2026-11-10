@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FiArrowDown, FiArrowUp, FiTrash2 } from 'react-icons/fi';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,9 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { EMPTY_PRODUCT, productSchema } from '@/features/products/productSchema';
-import { brandService } from '@/services/brandService';
-import { categoryService } from '@/services/categoryService';
-import { notifyError } from '@/utils/alerts';
 
 function Field({ id, label, error, className, children }) {
   return (
@@ -32,10 +29,16 @@ function Field({ id, label, error, className, children }) {
 
 // Formulario controlado por react-hook-form + Zod. `onSubmit` debe devolver una promesa:
 // así `isSubmitting` deshabilita el botón mientras se guarda.
-export default function ProductForm({ initialValues = EMPTY_PRODUCT, onSubmit, submitLabel = 'Guardar', cancelTo = '/products' }) {
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [loadingRelations, setLoadingRelations] = useState(true);
+export default function ProductForm({
+  initialValues = EMPTY_PRODUCT,
+  onSubmit,
+  submitLabel = 'Guardar',
+  cancelTo = '/products',
+  categories = [],
+  brands = [],
+  loadingRelations = false,
+  relationError = null
+}) {
   const [images, setImages] = useState(() => initialValues.images || []);
   const [imageUrl, setImageUrl] = useState('');
   const [imageUrlError, setImageUrlError] = useState('');
@@ -45,25 +48,6 @@ export default function ProductForm({ initialValues = EMPTY_PRODUCT, onSubmit, s
     handleSubmit,
     formState: { errors, isSubmitting }
   } = useForm({ resolver: zodResolver(productSchema), defaultValues: initialValues });
-
-  useEffect(() => {
-    let ignore = false;
-    Promise.all([categoryService.list(), brandService.list()])
-      .then(([categoryItems, brandItems]) => {
-        if (ignore) return;
-        setCategories(categoryItems);
-        setBrands(brandItems);
-      })
-      .catch(async (error) => {
-        if (!ignore) await notifyError(error, 'No se pudieron cargar categorías y marcas');
-      })
-      .finally(() => {
-        if (!ignore) setLoadingRelations(false);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   const field = (name) => ({
     id: name,
@@ -126,6 +110,11 @@ export default function ProductForm({ initialValues = EMPTY_PRODUCT, onSubmit, s
   return (
     <Card className="p-6">
       <form onSubmit={handleSubmit((values) => onSubmit(values, images))} noValidate className="space-y-6">
+        {relationError && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+            No se pudieron cargar categorías y marcas. Inténtalo de nuevo más tarde.
+          </div>
+        )}
         <Field id="name" label="Nombre" error={errors.name?.message}>
           <Input {...field('name')} placeholder="Camiseta Oficial 1ª Equipación" autoComplete="off" />
         </Field>

@@ -187,12 +187,16 @@ const existsBySlug = async (type, slug, excludeId) => {
 const hasReferences = async (type, id) => {
   const checks = {
     categories: async () =>
-      (await Product.exists({ category_id: id })) || (await Image.exists({ entity_type: 'category', entity_id: id })),
+      (await Product.exists({ category_id: id, deletedAt: null })) ||
+      (await Image.exists({ entity_type: 'category', entity_id: id, deletedAt: null })),
     brands: async () =>
-      (await Product.exists({ brand_id: id })) || (await Image.exists({ entity_type: 'brand', entity_id: id })),
-    products: async () => (await Variant.exists({ product_id: id })) || (await Image.exists({ entity_type: 'product', entity_id: id })),
-    variants: () => Image.exists({ entity_type: 'variant', entity_id: id }),
-    roles: () => User.exists({ role_id: id }),
+      (await Product.exists({ brand_id: id, deletedAt: null })) ||
+      (await Image.exists({ entity_type: 'brand', entity_id: id, deletedAt: null })),
+    products: async () =>
+      (await Variant.exists({ product_id: id, deletedAt: null })) ||
+      (await Image.exists({ entity_type: 'product', entity_id: id, deletedAt: null })),
+    variants: () => Image.exists({ entity_type: 'variant', entity_id: id, deletedAt: null }),
+    roles: () => User.exists({ role_id: id, deletedAt: null }),
     images: async () => false
   };
   try {

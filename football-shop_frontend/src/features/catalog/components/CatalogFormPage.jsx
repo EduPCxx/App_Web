@@ -13,21 +13,9 @@ import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { catalogEntities } from '@/features/catalog/catalogEntities';
 import { catalogServicesByType } from '@/features/catalog/catalogServices';
-import { productService } from '@/services/productService';
 import { notifyError, notifySuccess } from '@/utils/alerts';
 import { normalizeStatus } from '@/utils/status';
 
-const relations = {
-  products: productService,
-  categories: catalogServicesByType.categories,
-  brands: catalogServicesByType.brands,
-  variants: catalogServicesByType.variants,
-  roles: catalogServicesByType.roles,
-  product: productService,
-  category: catalogServicesByType.categories,
-  brand: catalogServicesByType.brands,
-  variant: catalogServicesByType.variants
-};
 const entityTypeResource = { product: 'products', variant: 'variants', brand: 'brands', category: 'categories' };
 
 function fieldValue(field, value) {
@@ -38,7 +26,7 @@ function fieldValue(field, value) {
   return value ?? '';
 }
 
-function FieldControl({ field, register, errors, relationItems }) {
+function FieldControl({ field, register, errors, relationItems, loadingRelationOptions = false }) {
   const commonProps = {
     id: field.name,
     'aria-invalid': errors[field.name] ? 'true' : 'false',
@@ -51,7 +39,7 @@ function FieldControl({ field, register, errors, relationItems }) {
     control = <Textarea {...commonProps} {...register(field.name)} />;
   } else if (field.type === 'select' || field.type === 'relation') {
     control = (
-      <Select {...commonProps} {...register(field.name)}>
+      <Select {...commonProps} {...register(field.name)} disabled={loadingRelationOptions && (field.type === 'relation' || field.type === 'select')}>
         <option value="">Selecciona…</option>
         {(field.options || relationItems).map((option) => (
           <option
@@ -82,7 +70,13 @@ function FieldControl({ field, register, errors, relationItems }) {
   );
 }
 
-export default function CatalogFormPage({ type, useResource }) {
+export default function CatalogFormPage({
+  type,
+  useResource,
+  relationOptions = {},
+  loadingRelationOptions = false,
+  relationError = null
+}) {
   const entity = catalogEntities[type];
   const service = catalogServicesByType[type];
   const { id } = useParams();
@@ -91,7 +85,6 @@ export default function CatalogFormPage({ type, useResource }) {
   const { create, update } = useResource({ autoLoad: false });
   const [loadingRecord, setLoadingRecord] = useState(editing);
   const [loadError, setLoadError] = useState(null);
-  const [relationOptions, setRelationOptions] = useState({});
   const defaults = useMemo(() => ({ ...entity.initialValues }), [entity]);
   const {
     register,
@@ -131,29 +124,6 @@ export default function CatalogFormPage({ type, useResource }) {
     };
   }, [defaults, editing, entity, id, reset, service]);
 
-  useEffect(() => {
-    let ignore = false;
-    const resourceNames = new Set(
-      entity.fields
-        .map((field) => (field.resourceFrom ? entityTypeResource[selectedEntityType] : field.resource))
-        .filter(Boolean)
-    );
-    resourceNames.forEach((resource) => {
-      if (!relations[resource]) return;
-      relations[resource]
-        .list()
-        .then((items) => {
-          if (!ignore) setRelationOptions((current) => ({ ...current, [resource]: items }));
-        })
-        .catch(async (err) => {
-          if (!ignore) await notifyError(err, `No se pudieron cargar las opciones de ${resource}`);
-        });
-    });
-    return () => {
-      ignore = true;
-    };
-  }, [entity, selectedEntityType]);
-
   const onSubmit = async (values) => {
     const payload = { ...values };
     if (type === 'variants') payload.attributes = JSON.parse(payload.attributes || '{}');
@@ -174,6 +144,11 @@ export default function CatalogFormPage({ type, useResource }) {
         title={`${editing ? 'Editar' : 'Crear'} ${entity.singular}`}
       />
       <Card className="p-6">
+        {relationError && (
+          <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+            No se pudieron cargar algunas opciones del formulario. Inténtalo de nuevo más tarde.
+          </div>
+        )}
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
           {entity.fields.map((field) => {
             const resource = field.resourceFrom ? entityTypeResource[selectedEntityType] : field.resource;
@@ -188,6 +163,7 @@ export default function CatalogFormPage({ type, useResource }) {
                 register={register}
                 errors={errors}
                 relationItems={relationOptions[resource] || []}
+                loadingRelationOptions={loadingRelationOptions}
               />
             );
           })}

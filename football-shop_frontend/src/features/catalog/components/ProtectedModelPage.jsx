@@ -10,8 +10,18 @@ export default function ProtectedModelPage({ type }) {
   const location = useLocation();
   const editing = /\/[^/]+\/edit$/.test(location.pathname);
   const creating = location.pathname.endsWith('/new');
+  const { items: roles, loading: loadingRoles, error: rolesError } = useRoles();
 
-  return editing || creating
-    ? <CatalogFormPage key={location.pathname} type={type} useResource={resourceHooks[type]} />
-    : <CatalogListPage type={type} useResource={resourceHooks[type]} />;
+  return editing || creating ? (
+    <CatalogFormPage
+      key={location.pathname}
+      type={type}
+      useResource={resourceHooks[type]}
+      relationOptions={type === 'users' ? { roles } : {}}
+      loadingRelationOptions={type === 'users' && loadingRoles}
+      relationError={type === 'users' ? rolesError : null}
+    />
+  ) : (
+    <CatalogListPage type={type} useResource={resourceHooks[type]} />
+  );
 }

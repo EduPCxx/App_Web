@@ -38,7 +38,9 @@ const entityModels = {
 };
 const notFound = (type) => new AppError(`${type} no encontrado`, 404, 'NOT_FOUND');
 const invalidRelation = (label) => new AppError(`${label} no existe o no está activo`, 404, 'RELATED_RESOURCE_NOT_FOUND');
+const invalidEntityType = () => new AppError('El tipo de entidad asociada no es válido', 400, 'VALIDATION_ERROR');
 const conflict = (message) => new AppError(message, 409, 'RELATED_RESOURCES_EXIST');
+const parentDependents = new Set(['categories', 'brands', 'roles']);
 const sluggedTypes = ['categories', 'brands'];
 const decimalNumber = (value) => Number(value && typeof value.toString === 'function' ? value.toString() : value);
 
@@ -46,15 +48,24 @@ const assertRelations = async (type, data) => {
   if (type === 'variants' && data.product_id && !(await repositoryFor('products').exists(data.product_id))) {
     throw invalidRelation('El producto');
   }
-  if (type === 'images' && data.entity_type && data.entity_id) {
+  if (type === 'images' && data.entity_type) {
     const mapped = entityModels[data.entity_type];
-    if (!mapped || !(await repositoryFor(mapped[1]).exists(data.entity_id))) throw invalidRelation('La entidad asociada');
+    if (!mapped) throw invalidEntityType();
+    if (data.entity_id && !(await repositoryFor(mapped[1]).exists(data.entity_id))) {
+      throw invalidRelation('La entidad asociada');
+    }
     data.entity_model = mapped[0];
-  } else if (type === 'images' && data.entity_type) {
-    data.entity_model = entityModels[data.entity_type][0];
   }
   if (type === 'users' && data.role_id && !(await repositoryFor('roles').exists(data.role_id))) {
     throw invalidRelation('El rol');
+  }
+};
+
+const assertNoActiveDependents = async (type, id) => {
+  if (!parentDependents.has(type)) return;
+  if (await catalogRepository.hasReferences(type, id)) {
+    const labels = { categories: 'categoría', brands: 'marca', roles: 'rol' };
+    throw new AppError(`No se puede eliminar lógicamente la ${labels[type]} porque tiene registros dependientes activos`, 409, 'HAS_DEPENDENTS');
   }
 };
 
@@ -167,6 +178,7 @@ const softDelete = async (type, id) => {
   const current = await catalogRepository.findIncludingDeleted(type, id);
   if (!current) throw notFound(type);
   if (current.deletedAt) throw new AppError('El registro ya está eliminado', 409, 'ALREADY_DELETED');
+  await assertNoActiveDependents(type, id);
   const document = await catalogRepository.softDeleteById(type, id);
   if (!document) throw notFound(type);
   return document;

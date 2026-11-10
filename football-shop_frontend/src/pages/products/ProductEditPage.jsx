@@ -3,18 +3,22 @@ import ErrorState from '@/components/common/ErrorState';
 import PageHeader from '@/components/common/PageHeader';
 import { FormSkeleton } from '@/components/common/Skeletons';
 import ProductForm from '@/features/products/components/ProductForm';
+import { syncProductImages } from '@/features/products/productImages';
 import { toFormValues } from '@/features/products/productSchema';
+import useBrands from '@/hooks/useBrands';
+import useCategories from '@/hooks/useCategories';
 import useProduct from '@/hooks/useProduct';
 import useProducts from '@/hooks/useProducts';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { notifyError, notifySuccess } from '@/utils/alerts';
-import { syncProductImages } from '@/features/products/productImages';
 
 export default function ProductEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { product, loading, error, notFound, retry } = useProduct(id);
   const { updateProduct } = useProducts();
+  const { items: categories, loading: loadingCategories, error: categoriesError } = useCategories();
+  const { items: brands, loading: loadingBrands, error: brandsError } = useBrands();
 
   const handleSubmit = async (values, images) => {
     const updated = await updateProduct(id, values);
@@ -42,6 +46,10 @@ export default function ProductEditPage() {
         onSubmit={handleSubmit}
         submitLabel="Guardar cambios"
         cancelTo="/products"
+        categories={categories}
+        brands={brands}
+        loadingRelations={loadingCategories || loadingBrands}
+        relationError={categoriesError || brandsError}
       />
     </section>
   );

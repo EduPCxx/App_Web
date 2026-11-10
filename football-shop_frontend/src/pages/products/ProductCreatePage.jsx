@@ -1,13 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/common/PageHeader';
 import ProductForm from '@/features/products/components/ProductForm';
+import { syncProductImages } from '@/features/products/productImages';
+import useBrands from '@/hooks/useBrands';
+import useCategories from '@/hooks/useCategories';
 import useProducts from '@/hooks/useProducts';
 import { notifyError, notifySuccess } from '@/utils/alerts';
-import { syncProductImages } from '@/features/products/productImages';
 
 export default function ProductCreatePage() {
   const navigate = useNavigate();
   const { createProduct } = useProducts();
+  const { items: categories, loading: loadingCategories, error: categoriesError } = useCategories();
+  const { items: brands, loading: loadingBrands, error: brandsError } = useBrands();
 
   const handleSubmit = async (values, images) => {
     const created = await createProduct(values);
@@ -26,7 +30,14 @@ export default function ProductCreatePage() {
   return (
     <section className="mx-auto max-w-3xl space-y-6">
       <PageHeader eyebrow="Gestión de productos" title="Crear producto" description="Rellena los datos del artículo." />
-      <ProductForm onSubmit={handleSubmit} submitLabel="Crear producto" />
+      <ProductForm
+        onSubmit={handleSubmit}
+        submitLabel="Crear producto"
+        categories={categories}
+        brands={brands}
+        loadingRelations={loadingCategories || loadingBrands}
+        relationError={categoriesError || brandsError}
+      />
     </section>
   );
 }
