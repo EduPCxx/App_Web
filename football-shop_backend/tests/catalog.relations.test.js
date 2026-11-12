@@ -168,7 +168,7 @@ const tests = {
       email: 'test@example.com',
       password: 'a-secret-password'
     });
-    assert.match(user.password_hash, /^scrypt\$[a-f0-9]+\$[a-f0-9]+$/);
+    assert.match(user.password_hash, /^\$argon2id\$v=19\$/);
     assert.strictEqual(Object.hasOwn(user, 'password'), false);
   },
   async appliesLifecycleTransitions() {

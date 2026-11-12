@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const catalogRepository = require('../repositories/catalog.repository');
 const categoryRepository = require('../repositories/category.repository');
 const brandRepository = require('../repositories/brand.repository');
@@ -9,6 +8,7 @@ const userRepository = require('../repositories/user.repository');
 const AppError = require('../utils/AppError');
 const { generateUniqueSlug } = require('../utils/slugify');
 const { assertStatusTransition } = require('../utils/lifecycle');
+const { hashPassword } = require('../utils/passwd');
 
 const repositories = {
   categories: categoryRepository,
@@ -206,14 +206,6 @@ const setStatus = async (type, id, status) => {
   const document = await catalogRepository.setStatusById(type, id, status);
   if (!document) throw notFound(type);
   return document;
-};
-
-const hashPassword = async (password) => {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const derived = await new Promise((resolve, reject) => {
-    crypto.scrypt(password, salt, 64, (error, key) => (error ? reject(error) : resolve(key)));
-  });
-  return `scrypt$${salt}$${derived.toString('hex')}`;
 };
 
 module.exports = { list, getById, getBySlug, create, update, remove, softDelete, restore, setActive, setStatus, hashPassword };

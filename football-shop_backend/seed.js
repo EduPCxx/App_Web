@@ -10,7 +10,7 @@ const Role = require('./models/role.model');
 const User = require('./models/user.model');
 const Image = require('./models/image.model');
 const { generateSlug } = require('./utils/slugify');
-const { hashPassword } = require('./services/catalog.service');
+const { hashPassword } = require('./utils/passwd');
 
 const categories = ['Camisetas', 'Botas', 'Balones', 'Equipamiento', 'Accesorios'];
 const brands = ['Nike', 'Adidas', 'Puma'];

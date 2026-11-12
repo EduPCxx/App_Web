@@ -13,6 +13,8 @@ const variantRoutes = require('./routes/variant.routes');
 const imageRoutes = require('./routes/image.routes');
 const roleRoutes = require('./routes/role.routes');
 const userRoutes = require('./routes/user.routes');
+const authRoutes = require('./routes/auth.routes');
+const profileRoutes = require('./routes/profile.routes');
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
@@ -43,7 +45,7 @@ app.get('/', (req, res) => {
     success: true,
     message: 'API de Productos de Fútbol',
     docs: '/api-docs',
-    endpoints: ['/api/categories', '/api/brands', '/api/products', '/api/variants', '/api/images', '/api/roles', '/api/users']
+    endpoints: ['/api/categories', '/api/brands', '/api/products', '/api/variants', '/api/images', '/api/roles', '/api/users', '/api/auth/login', '/api/profile/me']
   });
 });
 
@@ -59,6 +61,8 @@ app.use('/api/variants', variantRoutes);
 app.use('/api/images', imageRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 app.use(notFoundHandler);
