@@ -13,4 +13,33 @@ const login = async (req, res, next) => {
   }
 };
 
-module.exports = { login };
+const logout = async (req, res, next) => {
+  try {
+    const result = await authService.logout({
+      userId: req.user?.id,
+      token: req.token,
+      expiresAt: req.tokenPayload?.exp ? new Date(req.tokenPayload.exp * 1000) : null,
+      reason: 'logout'
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const logoutAll = async (req, res, next) => {
+  try {
+    const result = await authService.logoutAll({
+      userId: req.user?.id,
+      token: req.token,
+      expiresAt: req.tokenPayload?.exp ? new Date(req.tokenPayload.exp * 1000) : null
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { login, logout, logoutAll };

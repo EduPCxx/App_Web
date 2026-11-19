@@ -1,7 +1,10 @@
 const express = require('express');
 const controller = require('../controllers/dashboard.controller');
+const authenticate = require('../middlewares/authentication');
+const authorize = require('../middlewares/authorization');
 
 const router = express.Router();
+router.use(authenticate, authorize(['admin', 'editor']));
 
 /**
  * @swagger

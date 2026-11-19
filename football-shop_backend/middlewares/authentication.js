@@ -1,6 +1,27 @@
 const AppError = require('../utils/AppError');
 const { verifyToken } = require('../utils/jwt');
 const User = require('../models/user.model');
+const authRepository = require('../repositories/auth.repository');
+
+const revokedJtiCache = new Map();
+const CACHE_TTL_MS = 60_000;
+
+const getCachedRevocation = (jti) => {
+  const cached = revokedJtiCache.get(jti);
+  if (!cached) return false;
+
+  if (Date.now() > cached.expiresAt) {
+    revokedJtiCache.delete(jti);
+    return false;
+  }
+
+  return true;
+};
+
+const setCachedRevocation = (jti) => {
+  if (!jti) return;
+  revokedJtiCache.set(jti, { expiresAt: Date.now() + CACHE_TTL_MS });
+};
 
 const authenticate = async (req, res, next) => {
   try {
@@ -12,9 +33,15 @@ const authenticate = async (req, res, next) => {
     }
 
     const payload = verifyToken(token);
-    if (!payload || !payload.userId) {
-      throw new AppError('Token inválido', 401, 'UNAUTHORIZED');
+    const jti = payload?.jti || token;
+
+    if (getCachedRevocation(jti) || (await authRepository.isTokenRevoked(jti))) {
+      setCachedRevocation(jti);
+      throw new AppError('El token ha sido revocado', 401, 'TOKEN_REVOKED');
     }
+
+    req.token = token;
+    req.tokenPayload = payload;
 
     const user = await User.findById(payload.userId).populate('role_id');
     if (!user || user.deletedAt || !user.isActive) {

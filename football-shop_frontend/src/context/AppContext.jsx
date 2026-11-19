@@ -1,10 +1,12 @@
 import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import { productService } from '@/services/productService';
 import { notifyError } from '@/utils/alerts';
+import { useAuth } from '@/hooks/useAuth';
 
 export const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,8 +39,16 @@ export function AppProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      loaded.current = false;
+      setProducts([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     loadProducts();
-  }, [loadProducts]);
+  }, [isAuthenticated, loadProducts]);
 
   return (
     <AppContext.Provider value={{ products, setProducts, loading, error, loadProducts }}>

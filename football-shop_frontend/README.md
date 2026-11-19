@@ -21,6 +21,10 @@ npm run build    # build de producción en dist/
 
 ## Pantallas y API
 
+Los clientes autenticados solo pueden consultar `/products`. Los usuarios `editor` pueden
+ver el dashboard y gestionar el catálogo, pero no acceder a usuarios ni roles. Esas secciones
+están reservadas a `admin`.
+
 | Pantalla            | Ruta                    | API                                          |
 |---------------------|-------------------------|----------------------------------------------|
 | Dashboard           | `/`                     | `GET /api/dashboard/stats`                   |

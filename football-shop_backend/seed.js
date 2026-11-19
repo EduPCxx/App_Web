@@ -52,14 +52,47 @@ const seed = async () => {
     }
 
     const seededPassword = process.env.SEED_USER_PASSWORD || crypto.randomBytes(32).toString('hex');
+    const customerPasswordHash = await hashPassword('cliente123');
     await User.updateOne(
       { email: 'cliente@example.test' },
       {
+        $set: { password_hash: customerPasswordHash },
         $setOnInsert: {
           role_id: roleIds.get('customer'),
           name: 'Cliente de ejemplo',
           email: 'cliente@example.test',
-          password_hash: await hashPassword(seededPassword),
+          status: 'pending',
+          isActive: true
+        }
+      },
+      { upsert: true, runValidators: true }
+    );
+
+    const seededAdminPassword = process.env.SEED_ADMIN_PASSWORD || seededPassword;
+    await User.updateOne(
+      { email: 'admin@example.test' },
+      {
+        $setOnInsert: {
+          role_id: roleIds.get('admin'),
+          name: 'Administrador de ejemplo',
+          email: 'admin@example.test',
+          password_hash: await hashPassword(seededAdminPassword),
+          status: 'pending',
+          isActive: true
+        }
+      },
+      { upsert: true, runValidators: true }
+    );
+
+    const editorPasswordHash = await hashPassword('editor123');
+    await User.updateOne(
+      { email: 'editor@example.test' },
+      {
+        $set: { password_hash: editorPasswordHash },
+        $setOnInsert: {
+          role_id: roleIds.get('editor'),
+          name: 'Editor de catálogo',
+          email: 'editor@example.test',
           status: 'pending',
           isActive: true
         }
@@ -137,7 +170,7 @@ const seed = async () => {
     }
 
     console.log(
-      `Seed completado: ${categories.length} categorías, ${brands.length} marcas, ${inserted} productos nuevos, ${imagesAdded} imágenes nuevas; variantes, roles y usuario de ejemplo verificados.`
+      `Seed completado: ${categories.length} categorías, ${brands.length} marcas, ${inserted} productos nuevos, ${imagesAdded} imágenes nuevas; variantes, roles y usuarios de ejemplo verificados.`
     );
   } catch (error) {
     console.error('Error en el seed:', error.message);

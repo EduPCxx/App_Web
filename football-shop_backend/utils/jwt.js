@@ -1,3 +1,4 @@
+const { randomUUID } = require('crypto');
 const jwt = require('jsonwebtoken');
 const AppError = require('./AppError');
 
@@ -8,13 +9,26 @@ const getSecret = () => {
   return process.env.SECRET;
 };
 
-const signToken = (payload) =>
-  jwt.sign(payload, getSecret(), { expiresIn: process.env.EXPIRES_IN });
+const signToken = (payload) => {
+  const tokenPayload = {
+    ...payload,
+    jti: payload?.jti || randomUUID()
+  };
+
+  return jwt.sign(tokenPayload, getSecret(), {
+    expiresIn: process.env.EXPIRES_IN || '1h'
+  });
+};
 
 const verifyToken = (token) => {
   try {
-    return jwt.verify(token, getSecret());
+    const payload = jwt.verify(token, getSecret());
+    if (!payload || !payload.userId) {
+      throw new AppError('Token inválido o expirado', 401, 'UNAUTHORIZED');
+    }
+    return { ...payload, jti: payload.jti || null };
   } catch (error) {
+    if (error instanceof AppError) throw error;
     if (error.message === 'La variable de entorno SECRET no está definida') throw error;
     throw new AppError('Token inválido o expirado', 401, 'UNAUTHORIZED');
   }

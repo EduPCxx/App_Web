@@ -17,9 +17,13 @@ Module._load = function (request, ...rest) {
 const r = (p) => require(path.join(__dirname, '..', p));
 const AppError = r('utils/AppError');
 const wrapDbError = r('utils/wrapDbError');
+const { signToken, verifyToken } = r('utils/jwt');
 const { generateSlug, generateUniqueSlug } = r('utils/slugify');
 const validate = r('middlewares/validate.middleware');
 const { notFoundHandler, errorHandler } = r('middlewares/error.middleware');
+
+process.env.SECRET = process.env.SECRET || 'test-secret';
+process.env.EXPIRES_IN = process.env.EXPIRES_IN || '1h';
 
 const mockRes = () => {
   const res = { statusCode: null, body: null };
@@ -117,6 +121,16 @@ const tests = {
     const taken = new Set(['mi-titulo', 'mi-titulo-2']);
     assert.strictEqual(await generateUniqueSlug('Mi titulo', async (s) => taken.has(s)), 'mi-titulo-3');
     assert.strictEqual(await generateUniqueSlug('Libre', () => false), 'libre');
+  },
+  jwtAddsJtiAndVerifies() {
+    const token = signToken({ userId: 'user-123', email: 'admin@test.com', roles: ['admin'] });
+    const payload = verifyToken(token);
+    assert.ok(payload.jti);
+    assert.strictEqual(payload.userId, 'user-123');
+    assert.strictEqual(payload.email, 'admin@test.com');
+  },
+  jwtRejectsInvalidToken() {
+    assert.throws(() => verifyToken('not-a-token'), (e) => e.statusCode === 401 && e.code === 'UNAUTHORIZED');
   }
 };
 

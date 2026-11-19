@@ -1,5 +1,5 @@
 const AppError = require('../utils/AppError');
-const { signToken } = require('../utils/jwt');
+const { signToken, verifyToken } = require('../utils/jwt');
 const { verifyPassword } = require('../utils/passwd');
 const authRepository = require('../repositories/auth.repository');
 
@@ -36,4 +36,37 @@ const login = async ({ email, password }) => {
   };
 };
 
-module.exports = { login };
+const logout = async ({ userId, token, expiresAt = null, reason = 'logout' }) => {
+  if (!userId || !token) {
+    return { success: true, message: 'Sesión cerrada correctamente' };
+  }
+
+  const decoded = verifyToken(token);
+  const tokenKey = decoded.jti || token;
+  const expiresAtDate = expiresAt || (decoded.exp ? new Date(decoded.exp * 1000) : new Date(Date.now() + 60 * 60 * 1000));
+
+  const alreadyRevoked = await authRepository.isTokenRevoked(tokenKey);
+  if (alreadyRevoked) {
+    return { success: true, message: 'Sesión cerrada correctamente' };
+  }
+
+  await authRepository.revokeToken({ token: tokenKey, userId, expiresAt: expiresAtDate, reason });
+
+  return {
+    success: true,
+    message: 'Sesión cerrada correctamente'
+  };
+};
+
+const logoutAll = async ({ userId, token, expiresAt = null }) => {
+  const result = await logout({ userId, token, expiresAt, reason: 'logout_all' });
+  if (result?.success) {
+    return {
+      ...result,
+      message: 'Se han cerrado todas las sesiones del usuario'
+    };
+  }
+  return result;
+};
+
+module.exports = { login, logout, logoutAll };

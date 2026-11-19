@@ -72,6 +72,8 @@ Las lecturas de repositorio cargan las relaciones con `populate()`. Los servicio
 | `GET`, `PUT`, `DELETE` | `/api/users/:id` | Consultar y gestionar usuarios |
 | `GET` | `/api/dashboard/stats` | Estadísticas del catálogo |
 
+Las consultas de productos requieren autenticación. `admin` y `editor` pueden gestionar productos, categorías, marcas, variantes e imágenes y consultar las estadísticas del dashboard; solo `admin` puede acceder a usuarios y roles.
+
 Categorías, marcas, variantes, imágenes, roles y usuarios también admiten `PATCH /:id/soft-delete`, `PATCH /:id/restore`, `PATCH /:id/is-active` y `PATCH /:id/status`. El cambio de estado sigue las transiciones `pending → processing → published → finished`, permitiendo cancelar desde `pending`, `processing` o `published`; `finished` y `cancelled` son finales. Una transición inválida devuelve `422`.
 
 Los IDs de relación se validan como `ObjectId` y la entidad asociada debe existir. Por ejemplo, para crear un producto:
@@ -106,7 +108,21 @@ Los precios se almacenan como `Decimal128` y se devuelven como texto decimal par
 npm run seed
 ```
 
-Roles y Usuarios se gestionan desde sus tablas y formularios como el resto del catálogo. Para crear usuarios se envía `password`; el backend guarda un hash scrypt y nunca devuelve ni acepta `password_hash`. El seed crea `cliente@example.test` con una contraseña aleatoria si no se define `SEED_USER_PASSWORD`.
+Roles y Usuarios se gestionan desde sus tablas y formularios como el resto del catálogo. Para crear usuarios se envía `password`; el backend guarda un hash Argon2id y nunca devuelve ni acepta `password_hash`. El seed crea `cliente@example.test` (`customer`) con contraseña `cliente123` y `editor@example.test` (`editor`) con contraseña `editor123`; al volver a ejecutarlo, restablece esas dos contraseñas. No cambia la contraseña de un administrador existente. Para crear el admin por primera vez usa `SEED_ADMIN_PASSWORD` o `SEED_USER_PASSWORD`; si ninguna está definida, genera una contraseña aleatoria.
+
+Para restablecer la contraseña de una cuenta existente sin borrar sus datos, ejecuta desde esta carpeta:
+
+```bash
+npm run reset:user-password
+```
+
+El comando usa `cliente@example.test` por defecto. Para otra cuenta, indícala como argumento:
+
+```bash
+npm run reset:user-password -- usuario@example.test
+```
+
+La nueva contraseña se solicita dos veces sin mostrarla en pantalla. El restablecimiento no cambia el rol de la cuenta.
 
 El formulario de producto permite añadir imágenes pegando sus URLs, muestra una previsualización, avisa si una imagen no carga y permite ordenarlas, elegir la principal o eliminarlas antes de guardar. Las imágenes quedan asociadas mediante `entity_type` y `entity_id`. No se muestra una sección independiente de imágenes en el menú lateral.
 

@@ -1,3 +1,3 @@
 const createCatalogRouter = require('./catalog.routes');
 
-module.exports = createCatalogRouter('brands');
+module.exports = createCatalogRouter('brands', ['admin', 'editor']);

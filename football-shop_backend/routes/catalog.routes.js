@@ -5,9 +5,9 @@ const authorize = require('../middlewares/authorization');
 const validate = require('../middlewares/validate.middleware');
 const schemas = require('../validators/catalog.validator');
 
-const createCatalogRouter = (type) => {
+const createCatalogRouter = (type, allowedRoles = ['admin']) => {
   const router = express.Router();
-  router.use(authenticate, authorize(['admin']));
+  router.use(authenticate, authorize(allowedRoles));
   const controller = controllerFor(type);
   const schema = schemas[type];
   router.route('/').get(validate(schema.list), controller.list).post(validate(schema.create), controller.create);

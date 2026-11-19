@@ -4,15 +4,31 @@ import AdminSidebar from '@/components/layout/AdminSidebar';
 import Navbar from '@/components/layout/Navbar';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { PageSkeleton } from '@/components/common/Skeletons';
+import { useAuth } from '@/hooks/useAuth';
+import { apiService } from '@/services/apiService';
+import { notifyError } from '@/utils/alerts';
 
 export default function MainLayout() {
   const { pathname } = useLocation();
+  const { logout } = useAuth();
   const isDashboard = pathname === '/';
   const isCatalogSection = ['/products', '/categories', '/brands', '/variants', '/images', '/roles', '/users'].some((path) =>
     pathname.startsWith(path)
   );
   const usesFullLayout = isDashboard || isCatalogSection;
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await apiService.post('/auth/logout');
+    } catch (error) {
+      if (error?.code !== 'TOKEN_REVOKED') {
+        await notifyError(error, 'No se pudo cerrar la sesión');
+      }
+    } finally {
+      logout();
+    }
+  };
 
   // El menú móvil se cierra al navegar y con Escape
   useEffect(() => setMenuOpen(false), [pathname]);
@@ -33,6 +49,7 @@ export default function MainLayout() {
         }`}
       >
         <AdminSidebar
+          onLogout={handleLogout}
           className={`hidden lg:sticky lg:flex ${
             usesFullLayout
               ? 'lg:top-0 lg:h-screen lg:border-r lg:border-white/10 lg:bg-[#111111] lg:px-4 lg:py-5'
@@ -41,7 +58,7 @@ export default function MainLayout() {
         />
 
         <div className={usesFullLayout ? 'min-w-0' : 'min-w-0 space-y-4 xl:space-y-5'}>
-          <Navbar onMenuClick={() => setMenuOpen(true)} className={usesFullLayout ? 'mb-3 p-3 lg:hidden' : ''} />
+          <Navbar onMenuClick={() => setMenuOpen(true)} onLogout={handleLogout} className={usesFullLayout ? 'mb-3 p-3 lg:hidden' : ''} />
 
           <main
             className={

@@ -7,11 +7,13 @@ import DataTable from '@/components/common/DataTable';
 import ErrorState from '@/components/common/ErrorState';
 import { TableSkeleton } from '@/components/common/Skeletons';
 import useProducts from '@/hooks/useProducts';
+import { useAuth } from '@/hooks/useAuth';
 import { confirmAction, notifySuccess } from '@/utils/alerts';
 import { formatPrice, formatSubtitle, getProductPrice, getProductSku, getProductStock, isProductActive } from '@/utils/format';
 
 export default function ProductsListPage() {
   const { products, loading, error, loadProducts, setProductActive, removeProduct } = useProducts();
+  const { canManageCatalog } = useAuth();
 
   const handleToggle = async (product) => {
     const active = isProductActive(product);
@@ -34,8 +36,8 @@ export default function ProductsListPage() {
     if (confirmed && (await removeProduct(product._id))) notifySuccess('Producto eliminado');
   };
 
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const productColumns = [
       {
         key: 'name',
         header: 'Nombre',
@@ -61,7 +63,10 @@ export default function ProductsListPage() {
         }
       },
       { key: 'isActive', header: 'Activo', render: (row) => <ActiveBadge active={isProductActive(row)} /> },
-      {
+    ];
+
+    if (canManageCatalog) {
+      productColumns.push({
         key: 'actions',
         header: 'Acciones',
         render: (row) => (
@@ -79,11 +84,11 @@ export default function ProductsListPage() {
             </Button>
           </div>
         )
-      }
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setProductActive, removeProduct]
-  );
+      });
+    }
+
+    return productColumns;
+  }, [canManageCatalog, setProductActive, removeProduct]);
 
   let content;
   if (loading && products.length === 0) {
@@ -100,13 +105,17 @@ export default function ProductsListPage() {
         <div>
           <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-200/65">Catálogo</p>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-100">Productos</h1>
-          <p className="mt-1 text-xs text-slate-400">Administra el catálogo de tu tienda.</p>
+          <p className="mt-1 text-xs text-slate-400">
+            {canManageCatalog ? 'Gestiona el catálogo de productos.' : 'Consulta los productos del catálogo.'}
+          </p>
         </div>
-        <Button asChild size="lg">
-          <Link to="/products/new">
-            <FiPlus aria-hidden="true" /> Crear producto
-          </Link>
-        </Button>
+        {canManageCatalog && (
+          <Button asChild size="lg">
+            <Link to="/products/new">
+              <FiPlus aria-hidden="true" /> Crear producto
+            </Link>
+          </Button>
+        )}
       </header>
       <div className="overflow-hidden rounded-3xl border border-white/[0.09] bg-[#1b1b1d]/90 p-3 shadow-[0_24px_70px_-46px_rgba(0,0,0,0.72)] sm:p-5">
         {content}
