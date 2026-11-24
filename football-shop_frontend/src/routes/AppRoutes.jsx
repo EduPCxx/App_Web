@@ -20,6 +20,7 @@ const ImagesPage = lazy(() => import('@/pages/images/ImagesPage'));
 const ImageFormPage = lazy(() => import('@/pages/images/ImageFormPage'));
 const RolesPage = lazy(() => import('@/pages/roles/RolesPage'));
 const UsersPage = lazy(() => import('@/pages/users/UsersPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 function PublicRoute() {
@@ -59,6 +60,7 @@ export default function AppRoutes() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/products" element={<ProductsListPage />} />
 
           <Route element={<ProtectedRoute catalogOnly />}>

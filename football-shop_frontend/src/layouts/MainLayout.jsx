@@ -2,6 +2,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import Navbar from '@/components/layout/Navbar';
+import ProfileShortcut from '@/components/layout/ProfileShortcut';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { PageSkeleton } from '@/components/common/Skeletons';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,7 +13,7 @@ export default function MainLayout() {
   const { pathname } = useLocation();
   const { logout } = useAuth();
   const isDashboard = pathname === '/';
-  const isCatalogSection = ['/products', '/categories', '/brands', '/variants', '/images', '/roles', '/users'].some((path) =>
+  const isCatalogSection = ['/products', '/categories', '/brands', '/variants', '/images', '/roles', '/users', '/profile'].some((path) =>
     pathname.startsWith(path)
   );
   const usesFullLayout = isDashboard || isCatalogSection;
@@ -59,6 +60,10 @@ export default function MainLayout() {
 
         <div className={usesFullLayout ? 'min-w-0' : 'min-w-0 space-y-4 xl:space-y-5'}>
           <Navbar onMenuClick={() => setMenuOpen(true)} onLogout={handleLogout} className={usesFullLayout ? 'mb-3 p-3 lg:hidden' : ''} />
+
+          <div className="mb-2 flex justify-end px-4 pt-2 sm:px-6 lg:px-7">
+            <ProfileShortcut />
+          </div>
 
           <main
             className={

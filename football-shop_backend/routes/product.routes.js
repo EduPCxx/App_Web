@@ -20,9 +20,7 @@ const {
 } = require('../validators/product.validator');
 
 const router = express.Router();
-const manageCatalog = authorize(['admin', 'editor']);
-
-router.use(authenticate);
+const manageCatalog = [authenticate, authorize(['admin', 'editor'])];
 
 /**
  * @swagger
@@ -33,25 +31,25 @@ router.use(authenticate);
 router
   .route('/')
   .get(validate(listProductsSchema), controller.list)
-  .post(manageCatalog, validate(createProductSchema), controller.create);
+  .post(...manageCatalog, validate(createProductSchema), controller.create);
 
 router
   .route('/slug/:slug')
   .get(validate(getProductBySlugSchema), controller.getBySlug)
-  .put(manageCatalog, validate(updateProductBySlugSchema), controller.updateBySlug);
+  .put(...manageCatalog, validate(updateProductBySlugSchema), controller.updateBySlug);
 
-router.patch('/slug/:slug/soft-delete', manageCatalog, validate(softDeleteProductBySlugSchema), controller.softDeleteBySlug);
-router.patch('/slug/:slug/is-active', manageCatalog, validate(setProductActiveBySlugSchema), controller.setActiveBySlug);
+router.patch('/slug/:slug/soft-delete', ...manageCatalog, validate(softDeleteProductBySlugSchema), controller.softDeleteBySlug);
+router.patch('/slug/:slug/is-active', ...manageCatalog, validate(setProductActiveBySlugSchema), controller.setActiveBySlug);
 
 router
   .route('/:id')
   .get(validate(getProductSchema), controller.getById)
-  .put(manageCatalog, validate(updateProductSchema), controller.update)
-  .delete(manageCatalog, validate(deleteProductSchema), controller.remove);
+  .put(...manageCatalog, validate(updateProductSchema), controller.update)
+  .delete(...manageCatalog, validate(deleteProductSchema), controller.remove);
 
-router.patch('/:id/soft-delete', manageCatalog, validate(softDeleteProductSchema), controller.softDelete);
-router.patch('/:id/restore', manageCatalog, validate(restoreProductSchema), controller.restore);
-router.patch('/:id/is-active', manageCatalog, validate(setProductActiveSchema), controller.setActive);
-router.patch('/:id/status', manageCatalog, validate(setProductStatusSchema), controller.setStatus);
+router.patch('/:id/soft-delete', ...manageCatalog, validate(softDeleteProductSchema), controller.softDelete);
+router.patch('/:id/restore', ...manageCatalog, validate(restoreProductSchema), controller.restore);
+router.patch('/:id/is-active', ...manageCatalog, validate(setProductActiveSchema), controller.setActive);
+router.patch('/:id/status', ...manageCatalog, validate(setProductStatusSchema), controller.setStatus);
 
 module.exports = router;

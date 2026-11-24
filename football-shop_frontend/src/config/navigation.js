@@ -27,6 +27,7 @@ export const NAV_ITEMS = [
 // Títulos del navbar (el orden importa: las rutas fijas antes que las dinámicas)
 export const ROUTE_TITLES = [
   { path: '/', title: 'Dashboard' },
+  { path: '/profile', title: 'Mi perfil' },
   { path: '/products', title: 'Productos' },
   { path: '/products/new', title: 'Crear producto' },
   { path: '/products/:id/edit', title: 'Editar producto' },
