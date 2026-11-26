@@ -4,7 +4,7 @@ import { FiHome, FiPackage, FiTag, FiLayers, FiShield, FiUsers } from 'react-ico
 export const NAV_ITEMS = [
   {
     section: 'Principal',
-    items: [{ to: '/', label: 'Dashboard', icon: FiHome, end: true }]
+    items: [{ to: '/admin', label: 'Dashboard', icon: FiHome, end: true }]
   },
   {
     section: 'Gestión',
@@ -26,7 +26,9 @@ export const NAV_ITEMS = [
 
 // Títulos del navbar (el orden importa: las rutas fijas antes que las dinámicas)
 export const ROUTE_TITLES = [
-  { path: '/', title: 'Dashboard' },
+  { path: '/', title: 'Tienda' },
+  { path: '/shop/:slug', title: 'Detalle del producto' },
+  { path: '/admin', title: 'Dashboard' },
   { path: '/profile', title: 'Mi perfil' },
   { path: '/products', title: 'Productos' },
   { path: '/products/new', title: 'Crear producto' },

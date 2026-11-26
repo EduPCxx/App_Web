@@ -151,6 +151,9 @@ const update = async (type, id, data) => {
   }
   if (type === 'images') {
     payload.entity_model = entityModels[payload.entity_type][0];
+    if (payload.is_primary) {
+      await repositoryFor('images').unsetOtherPrimary(payload.entity_type, payload.entity_id, id);
+    }
   }
   await assertUniqueFlags(type, payload, id);
   if (type === 'users' && payload.password) {

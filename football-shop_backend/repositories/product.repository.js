@@ -1,4 +1,5 @@
 const Product = require('../models/product.model');
+const Variant = require('../models/variant.model');
 const wrapDbError = require('../utils/wrapDbError');
 
 const scoped = (filter = {}) => ({ ...filter, deletedAt: null });
@@ -16,7 +17,7 @@ const populateProduct = (query) =>
     .populate('category_id')
     .populate('brand_id')
     .populate('variants')
-    .populate({ path: 'images', populate: 'entity_id' });
+    .populate('images');
 
 const findAll = async (filter = {}, { skip = 0, limit = 10, sort = { createdAt: -1 } } = {}) => {
   try {
@@ -44,7 +45,7 @@ const findById = async (id) => {
 
 const findBySlug = async (slug) => {
   try {
-    return await populateProduct(Product.findOne(scoped({ slug }))).lean();
+    return normalizeDecimals(await populateProduct(Product.findOne(scoped({ slug }))).lean());
   } catch (error) {
     throw wrapDbError(error, 'obtener el producto por slug');
   }
@@ -208,6 +209,22 @@ const slugExists = async (slug, excludeId = null) => {
   }
 };
 
+const findProductIdsByVariantPrice = async ({ minPrice, maxPrice } = {}) => {
+  try {
+    const priceFilter = {};
+    if (minPrice !== undefined) priceFilter.$gte = minPrice;
+    if (maxPrice !== undefined) priceFilter.$lte = maxPrice;
+    if (!Object.keys(priceFilter).length) return await Product.distinct('_id', scoped());
+    return await Variant.distinct('product_id', {
+      deletedAt: null,
+      isActive: true,
+      price: priceFilter
+    });
+  } catch (error) {
+    throw wrapDbError(error, 'filtrar productos por precio');
+  }
+};
+
 module.exports = {
   findAll,
   count,
@@ -225,5 +242,6 @@ module.exports = {
   setActiveById,
   getStatsRaw,
   deleteById,
-  slugExists
+  slugExists,
+  findProductIdsByVariantPrice
 };

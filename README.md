@@ -75,6 +75,7 @@ cd <NOMBRE_DEL_PROYECTO>
    npm run migrate:catalog # Convierte el catálogo existente a referencias y variantes
    npm run migrate:lifecycle # Normaliza estados y campos de ciclo de vida
    npm run seed         # (Opcional) Carga 14 productos, variantes, imágenes, roles y un usuario de ejemplo
+   npm run migrate:variant-diversity # Añade tallas y números por producto
    ```
 
 4. **Iniciar el backend:**

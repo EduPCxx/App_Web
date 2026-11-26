@@ -15,7 +15,7 @@ export default function ErrorPage({ onRetry }) {
           </Button>
         )}
         <Button asChild>
-          <Link to="/">Ir al dashboard</Link>
+          <Link to="/admin">Ir al dashboard</Link>
         </Button>
       </div>
     </section>

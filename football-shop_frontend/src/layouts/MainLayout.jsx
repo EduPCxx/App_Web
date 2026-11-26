@@ -12,7 +12,7 @@ import { notifyError } from '@/utils/alerts';
 export default function MainLayout() {
   const { pathname } = useLocation();
   const { logout } = useAuth();
-  const isDashboard = pathname === '/';
+  const isDashboard = pathname === '/admin';
   const isCatalogSection = ['/products', '/categories', '/brands', '/variants', '/images', '/roles', '/users', '/profile'].some((path) =>
     pathname.startsWith(path)
   );

@@ -16,6 +16,11 @@ const normalize = (form) => ({
 // Lógica de negocio del cliente. Los errores se propagan como ApiError (ver apiService).
 export const productService = {
   list: async () => (await productRepository.list({ limit: MAX_ITEMS })).data,
+  search: async (params = {}) => productRepository.list({
+    ...params,
+    status: 'published',
+    isActive: true
+  }),
   getById: async (id) => (await productRepository.getById(id)).data,
   create: async (form) => (await productRepository.create(normalize(form))).data,
   update: async (id, form) => (await productRepository.updateById(id, normalize(form))).data,

@@ -41,7 +41,8 @@ const productSchema = new mongoose.Schema(
 productSchema.virtual('variants', {
   ref: 'Variant',
   localField: '_id',
-  foreignField: 'product_id'
+  foreignField: 'product_id',
+  match: { deletedAt: null }
 });
 productSchema.virtual('images', {
   ref: 'Image',

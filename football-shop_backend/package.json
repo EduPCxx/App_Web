@@ -10,6 +10,7 @@
     "migrate:slug": "node migrations/001-product-slug.js",
     "migrate:catalog": "node migrations/002-relational-catalog.js",
     "migrate:lifecycle": "node migrations/003-lifecycle-fields.js",
+    "migrate:variant-diversity": "node migrations/004-product-variant-diversity.js",
     "cleanup:revoked": "node scripts/cleanup-revoked-tokens.js",
     "reset:user-password": "node scripts/reset-user-password.js",
     "test": "node tests/middlewares.test.js && node tests/product.slug.test.js && node tests/catalog.relations.test.js && node tests/catalog.validator.test.js"

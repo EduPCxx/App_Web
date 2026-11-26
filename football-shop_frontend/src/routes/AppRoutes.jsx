@@ -1,9 +1,10 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from '@/pages/auth/LoginPage';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/hooks/useAuth';
+import { PageSkeleton } from '@/components/common/Skeletons';
 
 // Code splitting: cada pantalla es un chunk que se descarga al visitarla
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
@@ -22,6 +23,9 @@ const RolesPage = lazy(() => import('@/pages/roles/RolesPage'));
 const UsersPage = lazy(() => import('@/pages/users/UsersPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
+const HomePage = lazy(() => import('@/pages/shop/HomePage'));
+const ShopPage = lazy(() => import('@/pages/shop/ShopPage'));
+const ShopDetailPage = lazy(() => import('@/pages/shop/ShopDetailPage'));
 
 function PublicRoute() {
   const { isAuthenticated, isAdmin, canManageCatalog } = useAuth();
@@ -39,7 +43,7 @@ function PublicRoute() {
     const destination = canOpenRequestedPath
       ? requestedPath
       : canManageCatalog
-        ? '/'
+        ? '/admin'
         : '/products';
 
     return <Navigate to={destination} replace />;
@@ -50,50 +54,54 @@ function PublicRoute() {
 
 function RoleAwareNotFound() {
   const { isAdmin } = useAuth();
-  return isAdmin ? <NotFoundPage /> : <Navigate to="/products" replace />;
+  return isAdmin ? <Navigate to="/admin" replace /> : <Navigate to="/products" replace />;
 }
 
 export default function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/login" element={<PublicRoute />} />
+    <Suspense fallback={<PageSkeleton />}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/shop" element={<ShopPage />} />
+        <Route path="/shop/:slug" element={<ShopDetailPage />} />
+        <Route path="/login" element={<PublicRoute />} />
 
-      <Route element={<ProtectedRoute />}>
-        <Route element={<MainLayout />}>
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/products" element={<ProductsListPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/products" element={<ProductsListPage />} />
 
-          <Route element={<ProtectedRoute catalogOnly />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="/admin" element={<DashboardPage />} />
-            <Route path="/products/new" element={<ProductCreatePage />} />
-            <Route path="/products/:id/edit" element={<ProductEditPage />} />
-            <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/categories/new" element={<CategoryFormPage />} />
-            <Route path="/categories/:id/edit" element={<CategoryFormPage />} />
-            <Route path="/brands" element={<BrandsPage />} />
-            <Route path="/brands/new" element={<BrandFormPage />} />
-            <Route path="/brands/:id/edit" element={<BrandFormPage />} />
-            <Route path="/variants" element={<VariantsPage />} />
-            <Route path="/variants/new" element={<VariantFormPage />} />
-            <Route path="/variants/:id/edit" element={<VariantFormPage />} />
-            <Route path="/images" element={<ImagesPage />} />
-            <Route path="/images/new" element={<ImageFormPage />} />
-            <Route path="/images/:id/edit" element={<ImageFormPage />} />
+            <Route element={<ProtectedRoute catalogOnly />}>
+              <Route path="/admin" element={<DashboardPage />} />
+              <Route path="/products/new" element={<ProductCreatePage />} />
+              <Route path="/products/:id/edit" element={<ProductEditPage />} />
+              <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/categories/new" element={<CategoryFormPage />} />
+              <Route path="/categories/:id/edit" element={<CategoryFormPage />} />
+              <Route path="/brands" element={<BrandsPage />} />
+              <Route path="/brands/new" element={<BrandFormPage />} />
+              <Route path="/brands/:id/edit" element={<BrandFormPage />} />
+              <Route path="/variants" element={<VariantsPage />} />
+              <Route path="/variants/new" element={<VariantFormPage />} />
+              <Route path="/variants/:id/edit" element={<VariantFormPage />} />
+              <Route path="/images" element={<ImagesPage />} />
+              <Route path="/images/new" element={<ImageFormPage />} />
+              <Route path="/images/:id/edit" element={<ImageFormPage />} />
+            </Route>
+
+            <Route element={<ProtectedRoute adminOnly />}>
+              <Route path="/roles" element={<RolesPage />} />
+              <Route path="/roles/new" element={<RolesPage />} />
+              <Route path="/roles/:id/edit" element={<RolesPage />} />
+              <Route path="/users" element={<UsersPage />} />
+              <Route path="/users/new" element={<UsersPage />} />
+              <Route path="/users/:id/edit" element={<UsersPage />} />
+            </Route>
+
+            <Route path="*" element={<RoleAwareNotFound />} />
           </Route>
-
-          <Route element={<ProtectedRoute adminOnly />}>
-            <Route path="/roles" element={<RolesPage />} />
-            <Route path="/roles/new" element={<RolesPage />} />
-            <Route path="/roles/:id/edit" element={<RolesPage />} />
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/users/new" element={<UsersPage />} />
-            <Route path="/users/:id/edit" element={<UsersPage />} />
-          </Route>
-
-          <Route path="*" element={<RoleAwareNotFound />} />
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }

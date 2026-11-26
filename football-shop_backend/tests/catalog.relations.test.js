@@ -69,7 +69,19 @@ const fakeRepository = {
   findDuplicateFlag: async (type, filter, excludeId) =>
     Array.from(records[type].values()).some((row) =>
       row._id !== excludeId && Object.entries(filter).every(([key, value]) => row[key] === value)
-    )
+    ),
+  unsetOtherPrimary: async (entityType, entityId, excludeId) => {
+    for (const image of records.images.values()) {
+      if (
+        image._id !== excludeId &&
+        image.entity_type === entityType &&
+        image.entity_id === entityId &&
+        image.is_primary
+      ) {
+        image.is_primary = false;
+      }
+    }
+  }
 };
 
 const originalLoad = Module._load;
@@ -94,7 +106,8 @@ Module._load = function (request, ...rest) {
       exists: (id) => fakeRepository.exists(type, id),
       existsBySlug: (slug, excludeId) => fakeRepository.existsBySlug(type, slug, excludeId),
       hasReferences: (id) => fakeRepository.hasReferences(type, id),
-      findDuplicateFlag: (filter, excludeId) => fakeRepository.findDuplicateFlag(type, filter, excludeId)
+      findDuplicateFlag: (filter, excludeId) => fakeRepository.findDuplicateFlag(type, filter, excludeId),
+      unsetOtherPrimary: (...args) => fakeRepository.unsetOtherPrimary(...args)
     };
   }
   if (request === '../utils/slugify') {
@@ -160,6 +173,26 @@ const tests = {
       404,
       'RELATED_RESOURCE_NOT_FOUND'
     );
+  },
+  async replacesPrimaryProductImage() {
+    records.images.set('image-1', {
+      _id: 'image-1',
+      entity_type: 'product',
+      entity_id: 'product-1',
+      is_primary: true
+    });
+    records.images.set('image-2', {
+      _id: 'image-2',
+      entity_type: 'product',
+      entity_id: 'product-1',
+      is_primary: false
+    });
+
+    await service.update('images', 'image-2', { is_primary: true });
+
+    assert.strictEqual(records.images.get('image-1').is_primary, false);
+    assert.strictEqual(records.images.get('image-2').is_primary, true);
+    records.images.delete('image-2');
   },
   async hashesUserPassword() {
     const user = await service.create('users', {

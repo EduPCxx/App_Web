@@ -17,7 +17,7 @@ const populatePaths = {
     { path: 'products', populate: [{ path: 'category_id' }, { path: 'variants' }] },
     { path: 'images', populate: 'entity_id' }
   ],
-  products: ['category_id', 'brand_id', 'variants', { path: 'images', populate: 'entity_id' }],
+  products: ['category_id', 'brand_id', 'variants', 'images'],
   variants: [
     { path: 'product_id', populate: [{ path: 'category_id' }, { path: 'brand_id' }] },
     { path: 'images', populate: 'entity_id' }

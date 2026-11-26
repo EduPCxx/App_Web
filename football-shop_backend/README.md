@@ -35,6 +35,7 @@ npm run migrate:lifecycle
 
 La migración crea las categorías y marcas a partir de los datos existentes, convierte cada producto en una referencia relacional y crea una variante inicial con su precio, stock, talla y equipo. Es repetible para registros ya convertidos. Si la base de datos aún no tiene `slug`, ejecuta también `npm run migrate:slug` antes de la migración de catálogo.
 Ejecuta `migrate:lifecycle` después para completar estados, visibilidad, borrado lógico y slugs de categorías/marcas anteriores.
+Después de cargar los productos con el seed o con el catálogo existente, ejecuta `npm run migrate:variant-diversity` para ofrecer distintas tallas y números por producto. Los accesorios conservan su variante original de talla única. La migración conserva el stock total, deja una sola variante predeterminada y archiva los duplicados mediante borrado lógico.
 
 ## Esquema
 

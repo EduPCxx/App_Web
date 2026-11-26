@@ -29,10 +29,15 @@ const listProductsSchema = z.object({
   query: z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(10),
+    offset: z.coerce.number().int().min(0).optional(),
     category_id: emptyToUndefined(objectId.optional()),
     brand_id: emptyToUndefined(objectId.optional()),
     status: emptyToUndefined(status.optional()),
     isActive: emptyToUndefined(z.enum(['true', 'false']).transform((value) => value === 'true').optional()),
+    minPrice: emptyToUndefined(z.coerce.number().min(0).optional()),
+    maxPrice: emptyToUndefined(z.coerce.number().min(0).optional()),
+    min_price: emptyToUndefined(z.coerce.number().min(0).optional()),
+    max_price: emptyToUndefined(z.coerce.number().min(0).optional()),
     search: z.string().trim().optional(),
     sortBy: emptyToUndefined(z.enum(['name', 'status', 'createdAt']).default('createdAt')),
     order: emptyToUndefined(

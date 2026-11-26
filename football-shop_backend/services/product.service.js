@@ -9,7 +9,7 @@ const MAX_SLUG_RETRIES = 3;
 
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const buildFilter = (query) => {
+const buildFilter = async (query) => {
   const filter = {};
   if (query.category_id) filter.category_id = query.category_id;
   if (query.brand_id) filter.brand_id = query.brand_id;
@@ -18,6 +18,12 @@ const buildFilter = (query) => {
   if (query.search) {
     const rx = new RegExp(escapeRegex(query.search), 'i');
     filter.$or = [{ name: rx }, { description: rx }];
+  }
+  const minPrice = query.minPrice ?? query.min_price;
+  const maxPrice = query.maxPrice ?? query.max_price;
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    const productIds = await productRepository.findProductIdsByVariantPrice({ minPrice, maxPrice });
+    filter._id = { $in: productIds };
   }
   return filter;
 };
@@ -65,14 +71,15 @@ const createProduct = async (data) => {
 };
 
 const listProducts = async (query = {}) => {
-  const { page = 1, limit = 10 } = query;
-  const filter = buildFilter(query);
+  const { page = 1, limit = 10, offset } = query;
+  const filter = await buildFilter(query);
   const sort = buildSort(query.sortBy, query.order);
+  const skip = offset !== undefined ? offset : (page - 1) * limit;
   const [items, total] = await Promise.all([
-    productRepository.findAll(filter, { skip: (page - 1) * limit, limit, sort }),
+    productRepository.findAll(filter, { skip, limit, sort }),
     productRepository.count(filter)
   ]);
-  return { items, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) || 1 } };
+  return { items, pagination: { page, limit, offset: skip, total, totalPages: Math.ceil(total / limit) || 1 } };
 };
 
 const getProductById = async (id) => {

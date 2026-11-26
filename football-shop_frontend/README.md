@@ -21,13 +21,16 @@ npm run build    # build de producción en dist/
 
 ## Pantallas y API
 
-Los clientes autenticados solo pueden consultar `/products`. Los usuarios `editor` pueden
+La tienda pública está disponible sin iniciar sesión. Los usuarios autenticados pueden consultar `/products`. Los usuarios `editor` pueden
 ver el dashboard y gestionar el catálogo, pero no acceder a usuarios ni roles. Esas secciones
 están reservadas a `admin`.
 
 | Pantalla            | Ruta                    | API                                          |
 |---------------------|-------------------------|----------------------------------------------|
-| Dashboard           | `/`                     | `GET /api/dashboard/stats`                   |
+| Home                | `/`                     | `GET /api/products?status=published&isActive=true` |
+| Tienda              | `/shop`                 | `GET /api/products` y `GET /api/categories`   |
+| Detalle de producto | `/shop/:slug`           | `GET /api/products/slug/:slug`               |
+| Dashboard           | `/admin`                | `GET /api/dashboard/stats`                   |
 | Listado (tabla)     | `/products`             | `GET /api/products?limit=100`                |
 | Crear               | `/products/new`         | `POST /api/products`                         |
 | Editar              | `/products/:id/edit`    | `PUT /api/products/:id`                      |

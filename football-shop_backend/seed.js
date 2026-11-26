@@ -129,7 +129,7 @@ const seed = async () => {
           category_id: categoryByName.get(item.category),
           brand_id: brandByName.get(item.brand),
           description: item.description,
-          status: 'pending',
+          status: 'published',
           isActive: true
         });
         inserted += 1;
@@ -145,7 +145,7 @@ const seed = async () => {
             stock: item.stock,
             attributes: { size: item.size, team: item.team },
             is_default: true,
-            status: 'pending',
+            status: 'published',
             isActive: true
           }
         },
@@ -162,7 +162,7 @@ const seed = async () => {
           title: item.name,
           sort_order: 0,
           is_primary: true,
-          status: 'pending',
+          status: 'published',
           isActive: true
         });
         imagesAdded += 1;
